@@ -6,6 +6,10 @@ var assert = require('assert');
 var D = require('../data.js');
 var L = require('../logic.js')(D);
 
+// Проверки считают по курсу 90, как в примерах ТЗ: рабочий курс в data.js меняется, числа здесь нет.
+var LIVE_RATE = D.config.USD_RATE;
+D.config.USD_RATE = 90;
+
 var passed = 0;
 function test(name, fn) {
   try { fn(); passed++; console.log('  ok  ' + name); }
@@ -133,7 +137,7 @@ Object.keys(worst).forEach(function (z) {
     assert.strictEqual(r.mainTitle, D.result.zones[z].title);
     assert.ok(r.quotes.length >= 1 && r.quotes.length <= 3);
     assert.ok(r.todo && r.secondText && r.have.length >= 1 && r.have.length <= 3);
-    assert.ok(r.top.potential ? r.figure && r.top.now && r.top.can : r.top.text);
+    assert.ok(r.top.potential ? r.figure && r.top.now && r.top.amount && r.top.usd : r.top.text);
     assert.ok(!/утечк/i.test(JSON.stringify([r.title, r.top, r.stageText, r.stageNext, r.have, r.mainTitle, r.what, r.figure, r.todo, r.secondText, r.cta])), 'слово «утечка» на экране результата');
     assert.strictEqual(r.map.length, 6);
     assert.ok(r.map.filter(function (m) { return m.main; })[0].zone === z);
@@ -272,8 +276,10 @@ test('пример из правок: доход 200 000 ₽, потенциал
   assert.strictEqual(k.showPotential, true);
   var r = L.result(a);
   assert.strictEqual(plain(r.title), 'Аня, твои $10 000 ближе, чем кажется');
-  assert.strictEqual(plain(r.top.now), 'Сейчас ты зарабатываешь около 200 000 ₽.');
-  assert.strictEqual(plain(r.top.can), 'На твоей текущей аудитории можно около 430 000 ₽ в месяц.');
+  // 200 000 / 90 = 2 222 → $2 200; 430 000 / 90 = 4 778 → $4 800
+  assert.strictEqual(plain(r.top.now), 'Сейчас ты зарабатываешь около 200 000 ₽ (≈ $2 200).');
+  assert.strictEqual(plain(r.top.lead + ' ' + r.top.amount), 'На твоей текущей аудитории можно около 430 000 ₽');
+  assert.strictEqual(plain(r.top.usd), '≈ $4 800 в месяц');
   assert.ok(/^Как выйти на 430 000 ₽ в месяц в психологии при твоём чеке/.test(plain(r.cta.text)), plain(r.cta.text));
 });
 test('потенциал не больше дохода × 1,2: сверху цифра пути, в разборе $10 000', function () {
@@ -289,6 +295,18 @@ test('потенциал не больше дохода × 1,2: сверху ц�
   assert.strictEqual(L.calc(ideal()).showPotential, false);
   D.config.POTENTIAL_MIN = keep;
 });
+test('рабочий курс из настроек: цель в рублях и суммы в долларах', function () {
+  assert.ok(LIVE_RATE > 50 && LIVE_RATE < 200, 'курс ' + LIVE_RATE);
+  D.config.USD_RATE = 85;
+  var a = mix({ q5: 'b', q6: 'b', q15: 'c', q22: 'c', q23: 'b' });
+  var r = L.result(a);
+  D.config.USD_RATE = 90;
+  // цель 850 000 ₽: 850 000 / 45 000 → 19 продаж; 430 000 / 85 = 5 059 → $5 100
+  assert.strictEqual(r.calc.target, 850000);
+  assert.strictEqual(r.calc.sales, 19);
+  assert.strictEqual(plain(r.top.usd), '≈ $5 100 в месяц');
+  assert.ok(/\(≈ \$2 400\)/.test(plain(r.top.now)), plain(r.top.now));
+});
 test('этап без следующего шага и вторая точка роста', function () {
   var r = L.result(mix({ q42: [] }));
   assert.strictEqual(r.stage, 'grow');
@@ -302,7 +320,7 @@ test('ниша в предложном падеже', function () {
 test('в шаблонах не осталось скобок-подстановок', function () {
   Object.keys(worst).forEach(function (z) {
     var r = L.result(mix(worst[z]));
-    [r.title, r.top.now, r.top.can, r.top.text, r.figure, r.cta.text, r.secondText, r.what, r.todo].concat(r.have).filter(Boolean).forEach(function (s) {
+    [r.title, r.top.now, r.top.amount, r.top.usd, r.top.text, r.figure, r.cta.text, r.secondText, r.what, r.todo].concat(r.have).filter(Boolean).forEach(function (s) {
       assert.ok(!/[{}]|undefined|null|NaN/.test(s), s);
     });
   });

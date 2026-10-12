@@ -177,6 +177,12 @@
     return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP) + NBSP + '₽';
   }
 
+  // рубли в доллары по курсу из настроек, с округлением: $5 100
+  function usd(rub) {
+    var step = C.USD_ROUND || 1;
+    return '$' + num(Math.round(rub / C.USD_RATE / step) * step);
+  }
+
   function num(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP); }
 
   function plural(n, one, few, many) {
@@ -223,6 +229,8 @@
       baseMoney: k.baseMoney != null ? money(k.baseMoney) : '',
       income: k.income != null ? money(k.income) : '',
       potential: k.potential != null ? money(k.potential) : '',
+      incomeUsd: k.income != null ? usd(k.income) : '',
+      potentialUsd: k.potential != null ? usd(k.potential) : '',
       goal: k.showPotential ? money(k.potential) : '$' + num(C.TARGET_USD),
       writers: k.writers,
       buyers: k.writers != null && k.convKnown ? Math.max(0, Math.round(k.writers * k.conv)) : null
@@ -303,7 +311,8 @@
     // сверху либо потенциал, либо цифра пути до цели; цифру пути второй раз в блоке не повторяем
     var fig = figureFor(main, k, v);
     var top = k.showPotential
-      ? { potential: true, now: fill(R.potential.now, v), can: fill(R.potential.can, v), note: R.potential.note }
+      ? { potential: true, now: fill(R.potential.now, v), lead: R.potential.lead, amount: v.potential,
+          usd: fill(R.potential.usd, v), note: R.potential.note }
       : { potential: false, text: pathFigure(k, v), note: R.figures.note };
 
     return {

@@ -605,6 +605,7 @@ textarea.field { resize: vertical; min-height: 96px; }
   font: 700 clamp(60px, 19vw, 84px)/.95 var(--display);
   white-space: nowrap;
 }
+.potential__usd { display: block; color: var(--hero); font-size: 20px; font-weight: 800; white-space: nowrap; }
 .potential small {
   display: block;
   margin-top: 14px;

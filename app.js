@@ -132,6 +132,7 @@
       row['Денег в базе, ₽ в год'] = k.baseMoney != null ? k.baseMoney : '';
       row['Доход сейчас, ₽ в месяц'] = k.income != null ? k.income : '';
       row['Потенциал, ₽ в месяц'] = k.potential != null ? k.potential : '';
+      row['Курс доллара'] = C.USD_RATE;
     }
     L.answersText(a).forEach(function (x) { row[x.id.toUpperCase() + '. ' + x.title] = x.value; });
     return row;
@@ -431,7 +432,8 @@
     var second = r.secondText.split(':');
     var top = r.top.potential
       ? '<section class="potential"><p class="potential__now">' + nums(r.top.now) + '</p>' +
-        '<p class="potential__can">' + nums(r.top.can) + '</p><small>' + tx(r.top.note) + '</small></section>'
+        '<p class="potential__can">' + tx(r.top.lead) + ' <b>' + tx(r.top.amount) + '</b>' +
+        '<span class="potential__usd">' + tx(r.top.usd) + '</span></p><small>' + tx(r.top.note) + '</small></section>'
       : '<section class="potential potential--path"><p class="potential__now">' + nums(r.top.text) + '</p>' +
         '<small>' + tx(r.top.note) + '</small></section>';
     return '<div class="screen screen--result">' +
