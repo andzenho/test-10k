@@ -311,10 +311,10 @@
       '<span class="duo__label">' + tx(c.to.label) + '</span>' +
       '<b class="duo__num">' + tx(c.to.value) + '</b></div></div>' +
       (c.shots || []).map(function (s) {
-        var img = '<img src="' + esc(s.src) + '" width="' + s.w + '" height="' + s.h + '" alt="' + esc(s.alt) + '" loading="lazy">';
-        return '<figure class="shot' + (s.wide ? ' shot--wide' : '') + '">' +
-          (s.wide ? '<div class="shot__scroll" tabindex="0">' + img + '</div>' : img) +
-          (s.caption ? '<figcaption>' + tx(s.caption) + ' <span aria-hidden="true">→</span></figcaption>' : '') + '</figure>';
+        return '<figure class="shot">' + (s.parts || [s]).map(function (p) {
+          return '<img src="' + esc(p.src) + '" width="' + p.w + '" height="' + p.h + '" alt="' + esc(p.alt) + '">';
+        }).join('') +
+          (s.caption ? '<figcaption>' + tx(s.caption) + '</figcaption>' : '') + '</figure>';
       }).join('') +
       (c.text ? '<p class="case__text">' + tx(c.text) + '</p>' : '') + '</main>' +
       foot(D.buttons.next) + '</div>';

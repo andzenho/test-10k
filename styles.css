@@ -465,8 +465,7 @@ textarea.field { resize: vertical; min-height: 96px; }
 /* скрин-доказательство */
 .shot { margin-top: 12px; padding: 10px; border-radius: 20px; background: var(--cream); }
 .shot img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 12px; }
-.shot__scroll { overflow-x: auto; border-radius: 12px; -webkit-overflow-scrolling: touch; }
-.shot--wide img { max-width: none; width: auto; height: 178px; }
+.shot img + img { margin-top: 6px; }
 .shot figcaption { margin-top: 8px; color: #7A6058; font-size: 13.5px; font-weight: 700; text-align: center; }
 
 .case__text {
