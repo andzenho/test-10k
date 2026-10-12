@@ -21,8 +21,9 @@ var MAX_TEXT = 2000;
 // Первые колонки листа «Прохождения» в удобном для чтения порядке
 var HEAD = [
   'ID', 'Начало', 'Обновлено', 'Последний шаг', 'Шаг №', 'Ветка', 'Имя', 'Ник в Телеграме',
-  'Готовность', 'Этап', 'Главная утечка', 'Вторая утечка', 'Что разобрать', 'Ссылка на блог',
-  'Что пробовал(а)', 'Почему сейчас'
+  'Готовность', 'Этап', 'Главная точка роста', 'Вторая точка роста',
+  'Доход сейчас, ₽ в месяц', 'Потенциал, ₽ в месяц', 'Чек, ₽',
+  'Что разобрать', 'Ссылка на блог', 'Что пробовал(а)', 'Почему сейчас'
 ];
 
 var STEPS = [
@@ -57,6 +58,8 @@ function doPost(e) {
     var stepNo = Number(data.stepNo) || 0;
     var row = data.row && typeof data.row === 'object' ? data.row : {};
 
+    // первый запрос сам создаёт листы и сводку воронки
+    if (!SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_FUNNEL)) setup();
     var sheet = getSheet(SHEET_MAIN, HEAD);
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     var r = findRow(sheet, sid);
@@ -102,7 +105,7 @@ function doPost(e) {
   }
 }
 
-/** Запустить один раз вручную: создаёт листы и сводку воронки. */
+/** Создаёт листы и сводку воронки. Запускается сам при первом запросе; вручную нужен один раз, чтобы выдать скрипту доступ. */
 function setup() {
   getSheet(SHEET_MAIN, HEAD);
   getSheet(SHEET_EVENTS, ['Время', 'ID', 'Шаг', 'Шаг №']);
@@ -120,6 +123,12 @@ function setup() {
   f.getRange(2, 1, rows.length, 4).setValues(rows);
   f.getRange(2, 3, rows.length, 2).setNumberFormat('0%');
   f.setColumnWidth(1, 320);
+  // пустой лист, который таблица создаёт сама, не нужен
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ['Лист1', 'Sheet1'].forEach(function (n) {
+    var e = ss.getSheetByName(n);
+    if (e && e.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(e);
+  });
 }
 
 /** Проверка уведомления: запустить вручную после того, как заданы свойства скрипта. */
@@ -171,8 +180,10 @@ function notify(sheet, headers, r) {
     'Имя: ' + get('Имя'),
     'Ник: ' + get('Ник в Телеграме'),
     'Ветка: ' + get('Ветка'),
-    'Главная утечка: ' + (get('Главная утечка') || 'нет'),
+    'Главная точка роста: ' + (get('Главная точка роста') || 'нет'),
     'Этап: ' + (get('Этап') || 'нет'),
+    'Доход сейчас: ' + (get('Доход сейчас, ₽ в месяц') || 'нет'),
+    'Потенциал: ' + (get('Потенциал, ₽ в месяц') || 'нет'),
     'Готовность: ' + get('Готовность') + ' из 10',
     '',
     'Что хочет разобрать: ' + get('Что разобрать')

@@ -50,6 +50,8 @@ var ctx = {
   SpreadsheetApp: { getActiveSpreadsheet: function () {
     return {
       getSheetByName: function (n) { return sheets[n] || null; },
+      getSheets: function () { return Object.keys(sheets); },
+      deleteSheet: function () {},
       insertSheet: function (n) { return (sheets[n] = new Sheet()); }
     };
   } },
@@ -87,12 +89,12 @@ assert.strictEqual(r.utm_source, 'tg');
 });
 
 assert.ok(post({ sid: 'a1', step: 'result', stepNo: 11, row: {
-  'Имя': 'Аня', 'Ветка': 'эксперт', 'Этап': 'Случайные деньги', 'Главная утечка': 'Продажи',
+  'Имя': 'Аня', 'Ветка': 'эксперт', 'Этап': 'Случайные деньги', 'Главная точка роста': 'Продажи', 'Потенциал, ₽ в месяц': 430000,
   'Здоровье: Продажи': 2, 'Q7. Как ведёт себя твой доход?': 'скачет от месяца к месяцу',
   'Q4. Чем ты помогаешь людям? В двух словах': '=HYPERLINK("http://x")', 'ID': 'подмена', 'Шаг №': 99
 } }).ok);
 r = rowOf('a1');
-assert.strictEqual(r['Главная утечка'], 'Продажи');
+assert.strictEqual(r['Главная точка роста'], 'Продажи');
 assert.strictEqual(r['Здоровье: Продажи'], 2);
 assert.strictEqual(r['Q4. Чем ты помогаешь людям? В двух словах'], '\'=HYPERLINK("http://x")', 'формула должна стать текстом');
 assert.strictEqual(r['Шаг №'], 11, 'служебные колонки со страницы не перезаписываются');
@@ -104,7 +106,7 @@ assert.ok(post({ sid: 'a1', step: 'form', stepNo: 13, notify: true, row: {
 assert.strictEqual(sent.length, 1);
 assert.ok(/bottest-token\/sendMessage$/.test(sent[0].url));
 var text = sent[0].body.text;
-['Имя: Аня', 'Ник: @anya', 'Главная утечка: Продажи', 'Этап: Случайные деньги', 'Готовность: 8 из 10', 'Что хочет разобрать: продажи в переписке']
+['Имя: Аня', 'Ник: @anya', 'Главная точка роста: Продажи', 'Потенциал: 430000', 'Этап: Случайные деньги', 'Готовность: 8 из 10', 'Что хочет разобрать: продажи в переписке']
   .forEach(function (s) { assert.ok(text.indexOf(s) >= 0, 'в уведомлении нет: ' + s + '\n' + text); });
 
 // второй человек — вторая строка; уведомление без шага «заявка» не уходит

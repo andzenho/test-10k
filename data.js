@@ -30,7 +30,8 @@
       TG_LINK: 'https://t.me/m/8sSjotseZDIy',
       POLICY_URL: 'politika.html',
       CONSENT_URL: 'soglasie.html',
-      SHEET_URL: '',            // адрес веб-приложения Apps Script (integrations/google-sheets)
+      // веб-приложение Apps Script, привязанное к таблице лидов (integrations/google-sheets)
+      SHEET_URL: 'https://script.google.com/macros/s/AKfycbyt6foMDy2pQQdQOgn9NhAcXwgpyq1bpEY7NTXQvlSKs8KCuqusaK87z4t4nShZKyzr/exec',
       LOADING_MS: 2600
     },
 

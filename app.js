@@ -117,8 +117,8 @@
     row['Ветка'] = r.producer ? 'продюсер без проекта' : (a.q2 === 'producer' ? 'продюсер с проектом' : 'эксперт');
     if (!r.producer) {
       row['Этап'] = r.stageName;
-      row['Главная утечка'] = D.zones[r.main];
-      row['Вторая утечка'] = D.zones[r.second];
+      row['Главная точка роста'] = D.zones[r.main];
+      row['Вторая точка роста'] = D.zones[r.second];
       r.map.forEach(function (m) { row['Здоровье: ' + m.name] = m.health; });
       var k = r.calc;
       row['Чек, ₽'] = k.check;
