@@ -228,6 +228,7 @@ test('эксперт: условия показа вопросов', function ()
   assert.deepStrictEqual(s.slice(s.indexOf('q19'), s.indexOf('q19') + 4), ['q19', 'insight2', 'case2', 'q20']);
   assert.deepStrictEqual(s.slice(s.indexOf('q34'), s.indexOf('q34') + 4), ['q34', 'map1', 'insight4', 'q35']);
   assert.deepStrictEqual(s.slice(s.indexOf('q36'), s.indexOf('q36') + 3), ['q36', 'case3', 'q37']);
+  assert.deepStrictEqual(s.slice(s.indexOf('q30'), s.indexOf('q30') + 3), ['q30', 'plan1', 'q31']);
   var none = L.sequence(mix({ q8: ['none'] }));
   assert.ok(none.indexOf('q9') < 0 && none.indexOf('q10') < 0 && none.indexOf('q11') < 0);
 });

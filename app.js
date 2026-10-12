@@ -320,9 +320,18 @@
       foot(D.buttons.next) + '</div>';
   }
 
-  function viewShow(id) {
-    var s = D.shows[id];
-    var m = s.map;
+  function chip(text, tone, wrap) {
+    return '<span class="chip chip--' + tone + (wrap ? ' chip--wrap' : '') + '">' + tx(text) + '</span>';
+  }
+
+  function tabsRow(tabs, on) {
+    return '<div class="smap__tabs" aria-hidden="true">' + tabs.map(function (t, i) {
+      return '<span' + (i === on ? ' class="is-on"' : '') + '>' + tx(t) + '</span>';
+    }).join('') + '</div>';
+  }
+
+  // карта смыслов: слои, смыслы и точки по числу единиц контента
+  function mapWidget(m) {
     function dots(r) {
       var out = '', i, work = r.work || 0;
       for (i = 0; i < (r.out || 0); i++) out += '<i class="d-out"></i>';
@@ -337,17 +346,9 @@
       if (r.stock) p.push(m.legend.stock + ' ' + r.stock);
       return p.join(', ') || m.empty;
     }
-    return '<div class="screen screen--show">' + topBar('') +
-      '<main class="show"><span class="tag">' + tx(s.label) + '</span>' +
-      '<h1 class="show__title" tabindex="-1">' + tx(s.title) + '</h1>' +
-      '<figure class="shot"><div class="smap">' +
-      '<div class="smap__tabs" aria-hidden="true">' + m.tabs.map(function (t, i) {
-        return '<span' + (i === m.tabs.length - 1 ? ' class="is-on"' : '') + '>' + tx(t) + '</span>';
-      }).join('') + '</div>' +
+    return tabsRow(m.tabs, m.tabs.length - 1) +
       '<p class="smap__total">' + tx(m.total) + '</p>' +
-      '<div class="smap__chips">' + m.stats.map(function (c) {
-        return '<span class="chip chip--' + c.tone + '">' + tx(c.text) + '</span>';
-      }).join('') + '</div>' +
+      '<div class="smap__chips">' + m.stats.map(function (c) { return chip(c.text, c.tone); }).join('') + '</div>' +
       '<div class="smap__legend" aria-hidden="true"><span><i class="d-out"></i>' + tx(m.legend.out) + '</span>' +
       '<span><i class="d-work2"></i><i class="d-work"></i>' + tx(m.legend.work) + '</span>' +
       '<span><i class="d-stock"></i>' + tx(m.legend.stock) + '</span></div>' +
@@ -357,11 +358,35 @@
             var has = r.out || r.work || r.stock;
             return '<li><span class="smap__name">' + tx(r.name) + '</span>' +
               (has ? '<span class="smap__dots" role="img" aria-label="' + esc(label(r)) + '">' + dots(r) + '</span>'
-                : '<span class="chip chip--red">' + tx(m.empty) + '</span>') + '</li>';
+                : chip(m.empty, 'red')) + '</li>';
           }).join('') + '</ul>';
       }).join('') +
-      '<p class="smap__more">' + tx(m.more) + '</p>' +
-      '</div></figure>' +
+      '<p class="smap__more">' + tx(m.more) + '</p>';
+  }
+
+  // один день контент-плана: время, пост, площадка, статус и смыслы из карты
+  function planWidget(p) {
+    return tabsRow(p.tabs, 0) +
+      '<div class="splan__week"><b>' + tx(p.week) + '</b><span>' + tx(p.weekLabel) + '</span></div>' +
+      '<p class="splan__day">' + tx(p.day) + '</p>' +
+      '<ul class="splan__rows">' + p.rows.map(function (r) {
+        return '<li class="splan__row is-' + r.tone + '">' +
+          '<span class="splan__time">' + (r.time ? tx(r.time) : '—') + '</span>' +
+          '<div class="splan__body"><b class="splan__title">' + tx(r.title) + '</b>' +
+          '<div class="splan__meta">' + chip(r.channel, r.tone) + chip(r.status, r.statusTone) +
+          (r.tags || []).map(function (t) { return chip(t.text, t.tone); }).join('') + '</div>' +
+          (r.covers ? '<div class="splan__covers"><span>' + tx(p.coversLabel) + '</span>' +
+            r.covers.map(function (c) { return chip(c.text, c.tone, true); }).join('') + '</div>' : '') +
+          '</div></li>';
+      }).join('') + '</ul>';
+  }
+
+  function viewShow(id) {
+    var s = D.shows[id];
+    return '<div class="screen screen--show">' + topBar('') +
+      '<main class="show"><span class="tag">' + tx(s.label) + '</span>' +
+      '<h1 class="show__title" tabindex="-1">' + tx(s.title) + '</h1>' +
+      '<figure class="shot"><div class="smap">' + (s.map ? mapWidget(s.map) : planWidget(s.plan)) + '</div></figure>' +
       '<p class="case__text">' + tx(s.text) + '</p></main>' +
       foot(D.buttons.next) + '</div>';
   }
