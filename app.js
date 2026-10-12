@@ -489,7 +489,7 @@
     html += '<div class="form__row" data-row="consent"><label class="consent">' +
       '<input type="checkbox" data-form="consent"' + (f.consent ? ' checked' : '') + '>' +
       '<span class="consent__box">' + CHECK + '</span>' +
-      '<span>' + tx(F.consent) + '. <a href="' + esc(C.POLICY_URL) + '" target="_blank" rel="noopener">' + tx(F.consentLink) + '</a></span></label>' +
+      '<span>' + tx(F.consent) + ' <a href="' + esc(C.CONSENT_URL) + '" target="_blank" rel="noopener">' + tx(F.consentLink) + '</a></span></label>' +
       '<p class="form__err" hidden>' + tx(F.consentError) + '</p></div>' +
       '<button class="btn" type="submit">' + tx(F.button) + '</button></form></div>';
     return html;

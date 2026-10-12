@@ -764,6 +764,10 @@ textarea.field { resize: vertical; min-height: 96px; }
 .doc p + p { margin-top: 10px; }
 .doc ul { list-style: disc; padding-left: 22px; }
 .doc a { color: var(--gold); }
+.doc__date { margin-top: 10px; color: var(--soft); font-size: 14px; }
+.doc__more { margin-top: 28px; }
+.doc h1 + p { margin-top: 18px; }
+.doc__date + h2 { margin-top: 22px; }
 
 @media (min-width: 560px) {
   .wrap { padding-top: 12px; }

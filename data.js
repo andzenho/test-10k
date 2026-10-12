@@ -28,6 +28,7 @@
       MIN_SHOW: 10000,          // суммы меньше этой не показываем
       TG_LINK: 'https://t.me/m/8sSjotseZDIy',
       POLICY_URL: 'politika.html',
+      CONSENT_URL: 'soglasie.html',
       SHEET_URL: '',            // адрес веб-приложения Apps Script (integrations/google-sheets)
       LOADING_MS: 2600
     },
@@ -894,8 +895,9 @@
         { id: 'ready', type: 'scale', required: true, label: 'Насколько ты готов(а) менять подход прямо сейчас?', min: 1, max: 10, minLabel: 'не готов(а)', maxLabel: 'готов(а) полностью', error: 'Выбери число от 1 до 10' }
       ],
       optional: 'необязательно',
-      consent: 'Согласен(на) на обработку персональных данных',
-      consentLink: 'Политика обработки данных',
+      // галочка под заявкой: «Даю [согласие на обработку персональных данных]», ссылка ведёт на CONSENT_URL
+      consent: 'Даю',
+      consentLink: 'согласие на обработку персональных данных',
       consentError: 'Без согласия не могу принять заявку',
       button: 'Отправить заявку',
       sending: 'Отправляю…'
