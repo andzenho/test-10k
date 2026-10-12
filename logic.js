@@ -115,7 +115,14 @@
   }
 
   function ceilSafe(x) { return Math.ceil(x - 1e-9); }
-  function floorTo(x) { return Math.floor(x / C.ROUND_TO + 1e-9) * C.ROUND_TO; }
+  // Округление до ближайшего шага ROUND_TO. Ровно посередине — к чётному шагу:
+  // так сходятся оба примера из правок (62 500 → 60 000 и 427 500 → 430 000).
+  function roundTo(x) {
+    var q = x / C.ROUND_TO;
+    var f = Math.floor(q + 1e-9);
+    if (Math.abs(q - f - 0.5) < 1e-9) return (f % 2 === 0 ? f : f + 1) * C.ROUND_TO;
+    return Math.round(q) * C.ROUND_TO;
+  }
 
   function calc(a) {
     var seq = sequence(a);
@@ -137,7 +144,7 @@
     };
     if (check) {
       // с продажи до эксперта доходит чек за вычетом налогов и комиссий платёжек
-      r.net = Math.round(check * (1 - (C.FEES_RATE || 0)));
+      r.net = Math.round(check * (1 - (C.FEES || 0)));
       r.sales = ceilSafe(target / r.net);
       r.dialogs = ceilSafe(r.sales / C.BENCH_CONV);
       if (reach > 0) r.share = r.dialogs / reach;
@@ -149,14 +156,15 @@
         if (writers != null && conv != null) {
           base += Math.round(writers * Math.round((1 - conv) * 100) * 12 * check * C.LOST_RETURN / 100);
         }
-        r.baseMoney = floorTo(base);
+        r.baseMoney = roundTo(base);
       }
       if (writers != null && conv != null && conv < C.BENCH_CONV) {
-        r.lossDm = floorTo(writers * Math.round((C.BENCH_CONV - conv) * 100) * check / 100);
+        r.lossDm = roundTo(writers * Math.round((C.BENCH_CONV - conv) * 100) * check / 100);
       }
       if (writers != null && base != null) {
-        // потенциал в месяц: продажи по ориентиру конверсии плюс двенадцатая часть денег в базе
-        r.potential = floorTo(writers * Math.round(C.BENCH_CONV * 100) * check / 100 + base / 12);
+        // потенциал в месяц: продажи по ориентиру конверсии плюс двенадцатая часть денег в базе,
+        // за вычетом налогов и комиссий
+        r.potential = roundTo((writers * Math.round(C.BENCH_CONV * 100) * check / 100 + base / 12) * (1 - (C.FEES || 0)));
         r.showPotential = income != null && r.potential > income * C.POTENTIAL_MIN;
       }
     }

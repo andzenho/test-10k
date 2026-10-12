@@ -79,11 +79,18 @@ test('q16: несколько вариантов, минус только за �
   assert.strictEqual(s.PROD.minus, 1);
   assert.strictEqual(s.SALES.minus, 1);
 });
+test('округление: до ближайших 5 000, середина к чётному шагу', function () {
+  // 25 × 0,05 × 50 000 = 62 500 → 60 000 (пример из ТЗ), 427 500 → 430 000 (пример из правок)
+  assert.strictEqual(L.calc(mix({ q23: 'b' })).lossDm, 60000);
+  assert.strictEqual(L.calc(mix({ q5: 'b', q6: 'b', q15: 'c', q22: 'c', q23: 'b' })).potential, 430000);
+  // 7 × 5% × 7 000 + 25 × 0,55 × 12 × 10% × 7 000 = 117 950 → 120 000
+  assert.strictEqual(L.calc(mix({ q5: 'a', q15: 'a' })).baseMoney, 120000);
+});
 test('без налогов и комиссий расчёт как в исходном ТЗ', function () {
-  var keep = D.config.FEES_RATE;
-  D.config.FEES_RATE = 0;
+  var keep = D.config.FEES;
+  D.config.FEES = 0;
   var k = L.calc(ideal());
-  D.config.FEES_RATE = keep;
+  D.config.FEES = keep;
   assert.strictEqual(k.sales, 18);
   assert.strictEqual(k.dialogs, 60);
 });
@@ -256,28 +263,29 @@ test('что уже есть: сильные зоны и факты из отв�
   assert.strictEqual(strong.length, 3);
   assert.ok(/клиентов: база/.test(strong[2]), strong[2]);
 });
-test('пример из правок: доход 200 000 ₽, потенциал 475 000 ₽', function () {
+test('пример из правок: доход 200 000 ₽, потенциал 475 000 × 0,9 = 427 500 → 430 000 ₽', function () {
   var a = mix({ q5: 'b', q6: 'b', q15: 'c', q22: 'c', q23: 'b' });
   var k = L.calc(a);
   assert.strictEqual(k.income, 200000);
   assert.strictEqual(k.baseMoney, 1200000);
-  assert.strictEqual(k.potential, 475000);
+  assert.strictEqual(k.potential, 430000);
   assert.strictEqual(k.showPotential, true);
   var r = L.result(a);
   assert.strictEqual(plain(r.title), 'Аня, твои $10 000 ближе, чем кажется');
   assert.strictEqual(plain(r.top.now), 'Сейчас ты зарабатываешь около 200 000 ₽.');
-  assert.strictEqual(plain(r.top.can), 'На твоей текущей аудитории можно около 475 000 ₽ в месяц.');
-  assert.ok(/^Как выйти на 475 000 ₽ в месяц в психологии при твоём чеке/.test(plain(r.cta.text)), plain(r.cta.text));
+  assert.strictEqual(plain(r.top.can), 'На твоей текущей аудитории можно около 430 000 ₽ в месяц.');
+  assert.ok(/^Как выйти на 430 000 ₽ в месяц в психологии при твоём чеке/.test(plain(r.cta.text)), plain(r.cta.text));
 });
 test('потенциал не больше дохода × 1,2: сверху цифра пути, в разборе $10 000', function () {
   var r = L.result(mix({ q6: 'e' }));
-  assert.strictEqual(r.calc.potential, 450000);
+  // (375 000 + 900 000 / 12) × 0,9 = 405 000
+  assert.strictEqual(r.calc.potential, 405000);
   assert.strictEqual(r.top.potential, false);
   assert.ok(/Для \$10 000 при твоём чеке нужно 20 продаж/.test(plain(r.top.text)), plain(r.top.text));
   assert.ok(/^Как выйти на \$10 000 в месяц в психологии/.test(plain(r.cta.text)), plain(r.cta.text));
-  // 240 000 — ровно доход × 1,2: блок потенциала не показываем
+  // потенциал ровно на пороге: блок не показываем
   var keep = D.config.POTENTIAL_MIN;
-  D.config.POTENTIAL_MIN = 2.25;
+  D.config.POTENTIAL_MIN = 405000 / 200000;
   assert.strictEqual(L.calc(ideal()).showPotential, false);
   D.config.POTENTIAL_MIN = keep;
 });
