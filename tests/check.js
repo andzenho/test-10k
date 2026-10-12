@@ -110,7 +110,7 @@ test('правила q14 и q35', function () {
   assert.strictEqual(L.zoneStats(mix({ q35: ['ads', 'reels'], q42: [] })).ORG.minus, 0);
 });
 
-console.log('Главная утечка в каждой зоне');
+console.log('Главная точка роста в каждой зоне');
 var worst = {
   SALES: { q13: 'unknown', q20: ['wait'], q23: 'a', q24: 'a', q25: 'c', q26: ['a', 'b'] },
   PROD: { q14: ['consult'], q15: 'a', q16: ['e'], q17: 'c', q18: 'c', q19: ['a', 'b'] },
@@ -125,7 +125,9 @@ Object.keys(worst).forEach(function (z) {
     assert.strictEqual(r.main, z, 'главная утечка ' + r.main);
     assert.strictEqual(r.mainTitle, D.result.zones[z].title);
     assert.ok(r.quotes.length >= 1 && r.quotes.length <= 3);
-    assert.ok(r.figure && r.todo && r.secondText && r.strong.length);
+    assert.ok(r.todo && r.secondText && r.have.length >= 1 && r.have.length <= 3);
+    assert.ok(r.top.potential ? r.figure && r.top.now && r.top.can : r.top.text);
+    assert.ok(!/утечк/i.test(JSON.stringify([r.title, r.top, r.stageText, r.stageNext, r.have, r.mainTitle, r.what, r.figure, r.todo, r.secondText, r.cta])), 'слово «утечка» на экране результата');
     assert.strictEqual(r.map.length, 6);
     assert.ok(r.map.filter(function (m) { return m.main; })[0].zone === z);
   });
@@ -141,20 +143,26 @@ test('продажи: потери в переписке', function () {
   var r = L.result(mix(Object.assign({}, worst.SALES, { q23: 'a' })));
   // 25 × (0,3 − 0,05) × 50 000 = 312 500 → 310 000
   assert.strictEqual(r.calc.lossDm, 310000);
-  assert.ok(/около 310 000 ₽ в месяц только в переписке/.test(plain(r.figure)), plain(r.figure));
+  assert.ok(/Только в переписке это около 310 000 ₽ в месяц, которые можно забрать/.test(plain(r.figure)), plain(r.figure));
 });
 test('продажи: конверсия «не считал(а)»', function () {
   var r = L.result(mix(Object.assign({}, worst.SALES, { q23: 'unknown' })));
   assert.strictEqual(r.main, 'SALES');
-  assert.strictEqual(r.calc.lossDm, null);
-  assert.ok(/Ты не знаешь, сколько из написавших покупают/.test(r.figure));
+  // конверсию не считал(а): берём ориентир 0,25, 25 × 0,05 × 50 000 = 62 500 → 60 000
+  assert.strictEqual(r.calc.convKnown, false);
+  assert.strictEqual(r.calc.conv, 0.25);
+  assert.strictEqual(r.calc.lossDm, 60000);
+  assert.ok(/около 60 000 ₽ в месяц, которые можно забрать/.test(plain(r.figure)), plain(r.figure));
   assert.ok(/не считаешь/.test(L.insight('insight3', mix({ q23: 'unknown' })).text));
 });
 test('продажи: маленькие потери заменяются цифрой пути', function () {
   // 3 × 0,05 × 7 000 = 1 050 → меньше 10 000
   var r = L.result(mix(Object.assign({}, worst.SALES, { q22: 'a', q23: 'b', q15: 'a' })));
   assert.strictEqual(r.main, 'SALES');
-  assert.ok(/диалогов в месяц/.test(plain(r.figure)), plain(r.figure));
+  // потенциал тут меньше дохода, поэтому цифра пути стоит сверху и в блоке не повторяется
+  assert.strictEqual(r.top.potential, false);
+  assert.ok(/диалогов в месяц/.test(plain(r.top.text)), plain(r.top.text));
+  assert.strictEqual(r.figure, null);
 });
 test('продукт: чек до 10 тысяч → 143 продажи', function () {
   var r = L.result(mix(worst.PROD));
@@ -162,15 +170,18 @@ test('продукт: чек до 10 тысяч → 143 продажи', functio
   assert.strictEqual(r.calc.dialogs, 477);
   assert.ok(/При чеке около 7 000 ₽ для \$10 000 нужно 143 продажи в месяц/.test(plain(r.figure)), plain(r.figure));
 });
-test('база: 30 клиентов × 5% × 50 000 = 75 000 ₽', function () {
+test('база: прошлые клиенты и те, кто спрашивал и не купил', function () {
   var r = L.result(mix(worst.BASE));
-  assert.strictEqual(r.calc.baseMoney, 75000);
-  assert.ok(/до 75 000 ₽ в год/.test(plain(r.figure)), plain(r.figure));
+  // 30 × 5% × 50 000 = 75 000 и 25 × (1 − 0,45) × 12 × 10% × 50 000 = 825 000
+  assert.strictEqual(r.calc.baseMoney, 900000);
+  assert.ok(/прошлых клиентах и тех, кто спрашивал, но не купил, — лежит до 900 000 ₽ в год/.test(plain(r.figure)), plain(r.figure));
 });
-test('база: маленькая сумма заменяется цифрой пути', function () {
-  var r = L.result(mix(Object.assign({}, worst.BASE, { q5: 'a', q15: 'a' })));
-  assert.strictEqual(r.calc.baseMoney, 0);
-  assert.ok(/диалогов в месяц/.test(plain(r.figure)));
+test('база: сумма меньше порога заменяется цифрой пути', function () {
+  var keep = D.config.MIN_SHOW;
+  D.config.MIN_SHOW = 5000000;
+  var r = L.result(mix(worst.BASE));
+  D.config.MIN_SHOW = keep;
+  assert.ok(/диалогов в месяц/.test(plain(r.figure)), plain(r.figure));
 });
 test('цифра пути с долей аудитории', function () {
   var r = L.result(mix(worst.CONT));
@@ -183,6 +194,7 @@ test('охват 0: блога нет', function () {
   assert.strictEqual(r.calc.share, null);
   assert.strictEqual(r.main, 'ORG');
   assert.ok(!/аудитории/.test(r.figure), r.figure);
+  assert.ok(/диалогов в месяц/.test(plain(r.figure)));
   assert.ok(/Блога пока почти нет/.test(L.insight('insight2', a).text));
 });
 test('охват 0, но блог есть (только YouTube): не пишем «блога нет»', function () {
@@ -199,7 +211,7 @@ test('вывод 2: нужна почти вся аудитория', function (
   var a = mix({ q8: ['telegram'], q10: 'a', q13: 'telegram', q15: 'a' });
   assert.ok(/почти вся твоя аудитория/.test(L.insight('insight2', a).text));
   var r = L.result(Object.assign(a, worst.CONT));
-  assert.ok(/больше, чем вся твоя аудитория/.test(r.figure), r.figure);
+  assert.ok(/больше, чем вся твоя аудитория/.test(r.figure || r.top.text), r.figure || r.top.text);
 });
 test('вывод 3: пишут и покупают', function () {
   var t = plain(L.insight('insight3', mix({ q22: 'a', q23: 'a' })).text);
@@ -224,24 +236,65 @@ test('всё держится на тебе', function () {
   assert.strictEqual(r.stage, 'self');
 });
 
-console.log('Сильные стороны и тексты');
-test('сильные стороны только от 6 баллов', function () {
+console.log('Что уже есть, потенциал и тексты');
+test('что уже есть: сильные зоны и факты из ответов, не больше трёх строк', function () {
   var all = {};
   Object.keys(worst).forEach(function (z) { Object.assign(all, worst[z]); });
-  var r = L.result(mix(Object.assign(all, { q8: ['none'], q13: 'unknown', q22: 'a' })));
+  var weak = Object.assign({}, all, { q8: ['none'], q13: 'unknown', q22: 'a' });
+  var r = L.result(mix(weak));
   r.map.forEach(function (m) { assert.ok(m.health < 6, m.zone + ' ' + m.health); });
-  assert.deepStrictEqual(r.strong, [D.result.strongNoneClients]);
-  assert.deepStrictEqual(L.result(mix(Object.assign(all, { q5: 'a' }))).strong, [D.result.strongNone]);
-  assert.strictEqual(L.result(mix(worst.BASE)).strong.length, 2);
+  assert.deepStrictEqual(r.have.map(plain), ['10–50 клиентов: база, на которой можно зарабатывать.']);
+  assert.deepStrictEqual(L.result(mix(Object.assign({}, weak, { q5: 'a' }))).have, [D.result.strongNone]);
+  var facts = L.result(mix(Object.assign({}, all, { q5: 'd', q8: ['telegram'], q10: 'c', q13: 'unknown', q22: 'c' })));
+  facts.map.forEach(function (m) { assert.ok(m.health < 6, m.zone + ' ' + m.health); });
+  assert.deepStrictEqual(facts.have.map(plain), [
+    'Больше 200 клиентов: база, на которой можно зарабатывать.',
+    'Тебе пишут 15–40 человек в месяц: спрос уже есть.',
+    'Тебя видят около 500 человек — этого хватает для роста.'
+  ]);
+  var strong = L.result(mix(worst.BASE)).have.map(plain);
+  assert.strictEqual(strong.length, 3);
+  assert.ok(/клиентов: база/.test(strong[2]), strong[2]);
+});
+test('пример из правок: доход 200 000 ₽, потенциал 475 000 ₽', function () {
+  var a = mix({ q5: 'b', q6: 'b', q15: 'c', q22: 'c', q23: 'b' });
+  var k = L.calc(a);
+  assert.strictEqual(k.income, 200000);
+  assert.strictEqual(k.baseMoney, 1200000);
+  assert.strictEqual(k.potential, 475000);
+  assert.strictEqual(k.showPotential, true);
+  var r = L.result(a);
+  assert.strictEqual(plain(r.title), 'Аня, твои $10 000 ближе, чем кажется');
+  assert.strictEqual(plain(r.top.now), 'Сейчас ты зарабатываешь около 200 000 ₽.');
+  assert.strictEqual(plain(r.top.can), 'На твоей текущей аудитории можно около 475 000 ₽ в месяц.');
+  assert.ok(/^Как выйти на 475 000 ₽ в месяц в психологии при твоём чеке/.test(plain(r.cta.text)), plain(r.cta.text));
+});
+test('потенциал не больше дохода × 1,2: сверху цифра пути, в разборе $10 000', function () {
+  var r = L.result(mix({ q6: 'e' }));
+  assert.strictEqual(r.calc.potential, 450000);
+  assert.strictEqual(r.top.potential, false);
+  assert.ok(/Для \$10 000 при твоём чеке нужно 20 продаж/.test(plain(r.top.text)), plain(r.top.text));
+  assert.ok(/^Как выйти на \$10 000 в месяц в психологии/.test(plain(r.cta.text)), plain(r.cta.text));
+  // 240 000 — ровно доход × 1,2: блок потенциала не показываем
+  var keep = D.config.POTENTIAL_MIN;
+  D.config.POTENTIAL_MIN = 2.25;
+  assert.strictEqual(L.calc(ideal()).showPotential, false);
+  D.config.POTENTIAL_MIN = keep;
+});
+test('этап без следующего шага и вторая точка роста', function () {
+  var r = L.result(mix({ q42: [] }));
+  assert.strictEqual(r.stage, 'grow');
+  assert.strictEqual(r.stageNext, '');
+  assert.ok(/^Вторая точка роста — /.test(plain(r.secondText)), r.secondText);
 });
 test('ниша в предложном падеже', function () {
-  assert.ok(/сделать в психологии при твоём чеке/.test(L.result(ideal()).cta.text));
-  assert.ok(/сделать в твоей нише при/.test(L.result(mix({ q3: 'other', q3_other: 'сад' })).cta.text));
+  assert.ok(/в месяц в психологии при твоём чеке/.test(plain(L.result(ideal()).cta.text)));
+  assert.ok(/в месяц в твоей нише при/.test(plain(L.result(mix({ q3: 'other', q3_other: 'сад' })).cta.text)));
 });
 test('в шаблонах не осталось скобок-подстановок', function () {
   Object.keys(worst).forEach(function (z) {
     var r = L.result(mix(worst[z]));
-    [r.title, r.figure, r.cta.text, r.secondText, r.what, r.todo].forEach(function (s) {
+    [r.title, r.top.now, r.top.can, r.top.text, r.figure, r.cta.text, r.secondText, r.what, r.todo].concat(r.have).filter(Boolean).forEach(function (s) {
       assert.ok(!/[{}]|undefined|null|NaN/.test(s), s);
     });
   });

@@ -130,6 +130,8 @@
       row['Конверсия'] = k.conv != null ? k.conv : 'не считал(а)';
       row['Потери в переписке, ₽ в месяц'] = k.lossDm != null ? k.lossDm : '';
       row['Денег в базе, ₽ в год'] = k.baseMoney != null ? k.baseMoney : '';
+      row['Доход сейчас, ₽ в месяц'] = k.income != null ? k.income : '';
+      row['Потенциал, ₽ в месяц'] = k.potential != null ? k.potential : '';
     }
     L.answersText(a).forEach(function (x) { row[x.id.toUpperCase() + '. ' + x.title] = x.value; });
     return row;
@@ -427,26 +429,30 @@
         ctaBlock(r.cta) + '</div>';
     }
     var second = r.secondText.split(':');
+    var top = r.top.potential
+      ? '<section class="potential"><p class="potential__now">' + nums(r.top.now) + '</p>' +
+        '<p class="potential__can">' + nums(r.top.can) + '</p><small>' + tx(r.top.note) + '</small></section>'
+      : '<section class="potential potential--path"><p class="potential__now">' + nums(r.top.text) + '</p>' +
+        '<small>' + tx(r.top.note) + '</small></section>';
     return '<div class="screen screen--result">' +
-      '<h1 class="title" tabindex="-1">' + hl(r.title) + '</h1>' +
+      '<h1 class="title" tabindex="-1">' + hl(r.title) + '</h1>' + top +
 
       '<section class="stage"><div class="stamp"><span class="stamp__label">' + tx(R.stageLabel) + '</span>' +
       '<span class="stamp__name">' + tx(r.stageName) + '</span></div>' +
       '<p class="stage__text">' + tx(r.stageText) + '</p>' +
-      '<p class="stage__next">' + tx(r.stageNext) + '</p></section>' +
+      (r.stageNext ? '<p class="stage__next">' + tx(r.stageNext) + '</p>' : '') + '</section>' +
 
-      '<section class="sheet"><span class="tag tag--wine">' + tx(R.mainLabel) + '</span>' +
-      '<h2 class="sheet__title">' + tx(r.mainTitle) + '</h2>' +
+      '<section class="strong"><h2 class="h2">' + tx(R.haveLabel) + '</h2><ul class="checks">' +
+      r.have.map(function (s) { return '<li><span class="tick">' + CHECK + '</span>' + tx(s) + '</li>'; }).join('') +
+      '</ul></section>' +
+
+      '<section class="sheet"><h2 class="sheet__title sheet__title--first">' + tx(r.mainTitle) + '</h2>' +
       '<h3 class="cap">' + tx(R.whatLabel) + '</h3><p>' + tx(r.what) + '</p>' +
       (r.quotes.length ? '<h3 class="cap">' + tx(R.answersLabel) + '</h3>' + quotesList(r.quotes) : '') +
-      '<div class="figure"><p>' + nums(r.figure) + '</p><small>' + tx(r.figureNote) + '</small></div>' +
+      (r.figure ? '<div class="figure"><p>' + nums(r.figure) + '</p><small>' + tx(r.figureNote) + '</small></div>' : '') +
       '<h3 class="cap">' + tx(R.todoLabel) + '</h3><p>' + tx(r.todo) + '</p></section>' +
 
       '<section class="second"><p><b>' + tx(second[0]) + ':</b>' + tx(second.slice(1).join(':')) + '</p></section>' +
-
-      '<section class="strong"><h2 class="h2">' + tx(R.strongLabel) + '</h2><ul class="checks">' +
-      r.strong.map(function (s) { return '<li><span class="tick">' + CHECK + '</span>' + tx(s) + '</li>'; }).join('') +
-      '</ul></section>' +
 
       '<section class="sheet"><h2 class="sheet__title sheet__title--ink">' + tx(R.mapLabel) + '</h2>' + mapRows(r.map) + '</section>' +
 

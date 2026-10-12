@@ -195,6 +195,7 @@ h1:focus { outline: none; }
   text-wrap: balance;
 }
 .sheet__title--ink { margin: 0 0 16px; color: var(--ink); }
+.sheet__title--first { margin-top: 0; }
 
 .sheet--sample { margin-top: 34px; padding: 18px 16px 16px; }
 .sheet--sample figcaption {
@@ -584,6 +585,36 @@ textarea.field { resize: vertical; min-height: 96px; }
   overflow-wrap: anywhere;
 }
 .title--sm { font-size: clamp(44px, 13vw, 58px); margin-bottom: 4px; }
+
+/* блок потенциала: главная цифра экрана */
+.potential {
+  margin-top: 26px;
+  padding: 22px 18px 18px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--deep);
+  text-align: center;
+}
+.potential__now { font-size: 17px; font-weight: 600; line-height: 1.4; text-wrap: balance; }
+.potential__now b { color: var(--gold); white-space: nowrap; }
+.potential__can { margin-top: 14px; font-size: 19px; font-weight: 700; line-height: 1.35; text-wrap: balance; }
+.potential__can b {
+  display: block;
+  margin: 6px 0 2px;
+  color: var(--gold);
+  font: 700 clamp(60px, 19vw, 84px)/.95 var(--display);
+  white-space: nowrap;
+}
+.potential small {
+  display: block;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px dashed var(--line);
+  color: var(--soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.potential--path .potential__now { font-size: 19px; }
 
 .stage { margin-top: 34px; text-align: center; }
 .stamp {

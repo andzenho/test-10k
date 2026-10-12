@@ -123,11 +123,16 @@
     var reach = (optValue('q9', a, seq) || 0) + (optValue('q10', a, seq) || 0);
     var writers = optValue('q22', a, seq);
     var conv = optValue('q23', a, seq);
+    var convKnown = conv != null;
+    // не считал(а) конверсию: берём ориентир, чтобы расчёты не пропадали
+    if (!convKnown && seq.indexOf('q23') >= 0 && a.q23 === 'unknown') conv = C.DEFAULT_CONV;
     var clients = optValue('q5', a, seq);
+    var income = optValue('q6', a, seq);
     var target = C.TARGET_USD * C.USD_RATE;
     var r = {
-      check: check, reach: reach, writers: writers, conv: conv, clients: clients, target: target,
-      sales: null, dialogs: null, share: null, lossDm: null, baseMoney: null,
+      check: check, reach: reach, writers: writers, conv: conv, convKnown: convKnown, clients: clients,
+      income: income, target: target,
+      sales: null, dialogs: null, share: null, lossDm: null, baseMoney: null, potential: null, showPotential: false,
       hasBlog: asArray(a.q8).length > 0 && asArray(a.q8).indexOf('none') < 0
     };
     if (check) {
@@ -136,10 +141,23 @@
       r.sales = ceilSafe(target / r.net);
       r.dialogs = ceilSafe(r.sales / C.BENCH_CONV);
       if (reach > 0) r.share = r.dialogs / reach;
-      if (clients != null) r.baseMoney = floorTo(Math.round(clients * check * C.BASE_REPEAT));
+      // доли считаем в целых процентах, чтобы не терять копейки на дробях
+      var base = null;
+      if (clients != null) {
+        // в базе: повторные покупки прошлых клиентов и возврат тех, кто писал и не купил
+        base = Math.round(clients * check * C.BASE_REPEAT);
+        if (writers != null && conv != null) {
+          base += Math.round(writers * Math.round((1 - conv) * 100) * 12 * check * C.LOST_RETURN / 100);
+        }
+        r.baseMoney = floorTo(base);
+      }
       if (writers != null && conv != null && conv < C.BENCH_CONV) {
-        // разницу конверсий считаем в целых процентах, чтобы не терять копейки на дробях
         r.lossDm = floorTo(writers * Math.round((C.BENCH_CONV - conv) * 100) * check / 100);
+      }
+      if (writers != null && base != null) {
+        // потенциал в месяц: продажи по ориентиру конверсии плюс двенадцатая часть денег в базе
+        r.potential = floorTo(writers * Math.round(C.BENCH_CONV * 100) * check / 100 + base / 12);
+        r.showPotential = income != null && r.potential > income * C.POTENTIAL_MIN;
       }
     }
     return r;
@@ -182,9 +200,11 @@
 
   function vars(a, k) {
     var s5 = selected(Q.q5, a)[0];
+    var s22 = selected(Q.q22, a)[0];
     return {
       name: nameOf(a),
       clients: s5 ? s5.text : '',
+      writersRange: s22 ? s22.text : '',
       niche: nicheOf(a),
       check: k.check ? 'около ' + money(k.check) : '',
       reach: num(k.reach),
@@ -193,8 +213,11 @@
       share: k.share != null ? Math.round(k.share * 100) : null,
       loss: k.lossDm != null ? money(k.lossDm) : '',
       baseMoney: k.baseMoney != null ? money(k.baseMoney) : '',
+      income: k.income != null ? money(k.income) : '',
+      potential: k.potential != null ? money(k.potential) : '',
+      goal: k.showPotential ? money(k.potential) : '$' + num(C.TARGET_USD),
       writers: k.writers,
-      buyers: k.writers != null && k.conv != null ? Math.max(0, Math.round(k.writers * k.conv)) : null
+      buyers: k.writers != null && k.convKnown ? Math.max(0, Math.round(k.writers * k.conv)) : null
     };
   }
 
@@ -208,7 +231,7 @@
       if (k.reach === 0) tpl = k.hasBlog ? T.noReach : T.noBlog;
       else tpl = k.share <= C.REACH_SHARE_OK ? T.ok : T.over;
     }
-    else if (id === 'insight3') tpl = k.conv != null ? T.known : T.unknown;
+    else if (id === 'insight3') tpl = k.convKnown ? T.known : T.unknown;
     else tpl = T.text;
     return { label: T.label, text: fill(tpl, v) };
   }
@@ -219,20 +242,16 @@
     return fill(k.share > 1 ? F.pathOver : F.path, v);
   }
 
-  function figureFor(zone, a, k, v) {
+  // Цифра внутри блока точки роста: { text, path } — path значит «цифра пути до цели»
+  function figureFor(zone, k, v) {
     var F = D.result.figures;
-    if (zone === 'SALES') {
-      if (a.q23 === 'unknown') return fill(F.unknownConv, v);
-      if (k.lossDm != null && k.lossDm >= C.MIN_SHOW) return fill(F.loss, v);
-      return pathFigure(k, v);
-    }
-    if (zone === 'PROD') return fill(F.prod, v);
-    if (zone === 'BASE') {
-      if (k.baseMoney != null && k.baseMoney >= C.MIN_SHOW) return fill(F.base, v);
-      return pathFigure(k, v);
-    }
-    return pathFigure(k, v);
+    if (zone === 'SALES' && k.lossDm != null && k.lossDm >= C.MIN_SHOW) return { text: fill(F.loss, v), path: false };
+    if (zone === 'BASE' && k.baseMoney != null && k.baseMoney >= C.MIN_SHOW) return { text: fill(F.base, v), path: false };
+    if (zone === 'PROD') return { text: fill(F.prod, v), path: false };
+    return { text: pathFigure(k, v), path: true };
   }
+
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
   function producerResult(a) {
     var P = D.producerResult;
@@ -262,30 +281,42 @@
       .slice(0, 3)
       .map(function (t) { return { question: t.question, text: t.text }; });
 
-    var strong = order.slice().reverse()
+    // что уже есть: две самые сильные зоны от 6 баллов, потом факты из ответов; не больше трёх строк
+    var have = order.slice().reverse()
       .filter(function (z) { return stats[z].health >= 6; })
       .slice(0, 2)
       .map(function (z) { return R.zones[z].strong; });
-    if (!strong.length) strong = [a.q5 && a.q5 !== 'a' ? R.strongNoneClients : R.strongNone];
+    if (a.q5 && a.q5 !== 'a') have.push(cap(fill(R.have.clients, v)));
+    if (a.q22 && a.q22 !== 'a') have.push(fill(R.have.writers, v));
+    if (k.reach > 0) have.push(fill(R.have.reach, v));
+    have = have.slice(0, 3);
+    if (!have.length) have = [R.strongNone];
+
+    // сверху либо потенциал, либо цифра пути до цели; цифру пути второй раз в блоке не повторяем
+    var fig = figureFor(main, k, v);
+    var top = k.showPotential
+      ? { potential: true, now: fill(R.potential.now, v), can: fill(R.potential.can, v), note: R.potential.note }
+      : { potential: false, text: pathFigure(k, v), note: R.figures.note };
 
     return {
       producer: false,
       name: v.name,
       title: fill(R.title, v),
+      top: top,
       stage: stage,
       stageName: R.stages[stage].name,
       stageText: R.stages[stage].text,
       stageNext: R.stages[stage].next,
+      have: have,
       main: main,
       second: second,
       mainTitle: R.zones[main].title,
       what: R.zones[main].what,
       quotes: quotes,
-      figure: figureFor(main, a, k, v),
-      figureNote: R.figures.note,
+      figure: fig.path && !top.potential ? null : fig.text,
+      figureNote: fig.path || main === 'PROD' ? R.figures.note : R.figures.noteMoney,
       todo: R.zones[main].todo,
       secondText: R.zones[second].second,
-      strong: strong,
       map: D.mapOrder.map(function (z) {
         return { zone: z, name: D.zones[z], health: stats[z].health, color: stats[z].color, main: z === main };
       }),
