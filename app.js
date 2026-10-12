@@ -320,6 +320,52 @@
       foot(D.buttons.next) + '</div>';
   }
 
+  function viewShow(id) {
+    var s = D.shows[id];
+    var m = s.map;
+    function dots(r) {
+      var out = '', i, work = r.work || 0;
+      for (i = 0; i < (r.out || 0); i++) out += '<i class="d-out"></i>';
+      for (i = 0; i < work; i++) out += '<i class="' + (i < Math.ceil(work / 2) && work > 1 ? 'd-work2' : 'd-work') + '"></i>';
+      for (i = 0; i < (r.stock || 0); i++) out += '<i class="d-stock"></i>';
+      return out;
+    }
+    function label(r) {
+      var p = [];
+      if (r.out) p.push(m.legend.out + ' ' + r.out);
+      if (r.work) p.push(m.legend.work + ' ' + r.work);
+      if (r.stock) p.push(m.legend.stock + ' ' + r.stock);
+      return p.join(', ') || m.empty;
+    }
+    return '<div class="screen screen--show">' + topBar('') +
+      '<main class="show"><span class="tag">' + tx(s.label) + '</span>' +
+      '<h1 class="show__title" tabindex="-1">' + tx(s.title) + '</h1>' +
+      '<figure class="shot"><div class="smap">' +
+      '<div class="smap__tabs" aria-hidden="true">' + m.tabs.map(function (t, i) {
+        return '<span' + (i === m.tabs.length - 1 ? ' class="is-on"' : '') + '>' + tx(t) + '</span>';
+      }).join('') + '</div>' +
+      '<p class="smap__total">' + tx(m.total) + '</p>' +
+      '<div class="smap__chips">' + m.stats.map(function (c) {
+        return '<span class="chip chip--' + c.tone + '">' + tx(c.text) + '</span>';
+      }).join('') + '</div>' +
+      '<div class="smap__legend" aria-hidden="true"><span><i class="d-out"></i>' + tx(m.legend.out) + '</span>' +
+      '<span><i class="d-work2"></i><i class="d-work"></i>' + tx(m.legend.work) + '</span>' +
+      '<span><i class="d-stock"></i>' + tx(m.legend.stock) + '</span></div>' +
+      m.groups.map(function (g) {
+        return '<span class="chip chip--' + g.tone + ' smap__layer">' + tx(g.layer) + '</span><ul class="smap__rows">' +
+          g.rows.map(function (r) {
+            var has = r.out || r.work || r.stock;
+            return '<li><span class="smap__name">' + tx(r.name) + '</span>' +
+              (has ? '<span class="smap__dots" role="img" aria-label="' + esc(label(r)) + '">' + dots(r) + '</span>'
+                : '<span class="chip chip--red">' + tx(m.empty) + '</span>') + '</li>';
+          }).join('') + '</ul>';
+      }).join('') +
+      '<p class="smap__more">' + tx(m.more) + '</p>' +
+      '</div></figure>' +
+      '<p class="case__text">' + tx(s.text) + '</p></main>' +
+      foot(D.buttons.next) + '</div>';
+  }
+
   function viewLoading() {
     var T = D.loading;
     var step = Math.floor((C.LOADING_MS - 500) / T.steps.length);
@@ -433,6 +479,7 @@
     else if (L.Q[id]) html = viewQuestion(L.Q[id]);
     else if (D.insights[id]) html = viewInsight(id);
     else if (D.cases[id]) html = viewCase(id);
+    else if (D.shows[id]) html = viewShow(id);
     else if (id === 'loading') html = viewLoading();
     else if (id === 'result') html = viewResult();
     else if (id === 'form') html = viewForm();

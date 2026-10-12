@@ -476,6 +476,39 @@ textarea.field { resize: vertical; min-height: 96px; }
   text-wrap: pretty;
 }
 
+/* ---------- Экран «Карта смыслов» ---------- */
+
+.screen--show { padding-bottom: 0; }
+.show { display: flex; flex-direction: column; margin: auto 0; padding: 0 0 22px; }
+.show__title { margin-top: 14px; font-size: 26px; font-weight: 800; line-height: 1.18; text-wrap: balance; }
+
+/* перерисованный экран рабочего инструмента: свои тёмно-синие цвета */
+.smap { padding: 12px 12px 14px; border-radius: 12px; background: #131824; color: #E8EBF2; }
+.smap i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+.smap .d-out { background: #7BE29C; }
+.smap .d-work { background: #FF9372; }
+.smap .d-work2 { background: #A78BFA; }
+.smap .d-stock { background: #8B90A0; }
+.smap__tabs { display: flex; gap: 14px; padding-bottom: 9px; border-bottom: 1px solid #262D3D; color: #8B90A0; font-size: 12px; font-weight: 600; }
+.smap__tabs .is-on { position: relative; color: #fff; }
+.smap__tabs .is-on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -10px; height: 2px; background: #8FA8FF; }
+.smap__total { margin-top: 14px; font-size: 15px; font-weight: 800; }
+.smap__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { display: inline-block; padding: 3px 9px 4px; border-radius: 8px; font-size: 11.5px; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+.chip--green { background: #173A2A; color: #86E3A6; }
+.chip--amber { background: #3D2F13; color: #F1BC62; }
+.chip--red { background: #40201C; color: #FF9A86; }
+.chip--blue { background: #1F2B5E; color: #9DB2FF; }
+.smap__legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 12px; color: #A4AABA; font-size: 11.5px; font-weight: 600; }
+.smap__legend i { margin-right: 4px; }
+.smap__layer { margin-top: 16px; }
+.smap__rows { margin-top: 7px; padding: 0 11px; border: 1px solid #262D3D; border-radius: 12px; background: #171D2A; }
+.smap__rows li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 8px 0; }
+.smap__rows li + li { border-top: 1px solid #262D3D; }
+.smap__name { font-size: 13.5px; font-weight: 700; line-height: 1.25; }
+.smap__dots { flex: none; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; max-width: 106px; }
+.smap__more { margin-top: 12px; color: #8B90A0; font-size: 11.5px; font-weight: 600; line-height: 1.35; text-align: center; }
+
 /* ---------- Загрузка ---------- */
 
 .screen--loading { justify-content: center; padding-bottom: 12vh; }
