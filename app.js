@@ -381,13 +381,23 @@
       }).join('') + '</ul>';
   }
 
+  // таблица CRM: статус и заметки по каждому, кто интересовался
+  function crmWidget(c) {
+    return '<div class="crm"><div class="crm__head"><span>' + tx(c.head[0]) + '</span><span>' + tx(c.head[1]) + '</span></div>' +
+      '<ul>' + c.rows.map(function (r) {
+        return '<li><span class="crm__status is-' + r.tone + '">' + tx(r.status) + '</span>' +
+          '<span class="crm__note">' + tx(r.text) + '</span></li>';
+      }).join('') + '</ul></div>';
+  }
+
   function viewShow(id) {
     var s = D.shows[id];
     return '<div class="screen screen--show">' + topBar('') +
       '<main class="show"><span class="tag">' + tx(s.label) + '</span>' +
       '<h1 class="show__title" tabindex="-1">' + tx(s.title) + '</h1>' +
-      '<figure class="shot"><div class="smap">' + (s.map ? mapWidget(s.map) : planWidget(s.plan)) + '</div></figure>' +
-      '<p class="case__text">' + tx(s.text) + '</p></main>' +
+      '<figure class="shot">' + (s.crm ? crmWidget(s.crm)
+        : '<div class="smap">' + (s.map ? mapWidget(s.map) : planWidget(s.plan)) + '</div>') + '</figure>' +
+      [].concat(s.text || []).map(function (p) { return '<p class="case__text">' + tx(p) + '</p>'; }).join('') + '</main>' +
       foot(D.buttons.next) + '</div>';
   }
 
