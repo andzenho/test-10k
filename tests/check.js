@@ -18,7 +18,7 @@ function ideal() {
   return {
     q1: 'Аня', q2: 'expert', q3: 'psy', q4: '', q5: 'b', q6: 'b', q7: 'stable',
     q8: ['instagram', 'telegram'], q9: 'c', q10: 'b', q12: 'a', q13: 'instagram',
-    q14: ['support', 'course'], q15: 'c', q16: 'a', q17: 'a', q18: 'a', q19: ['none'],
+    q14: ['support', 'course'], q15: 'c', q16: ['a'], q17: 'a', q18: 'a', q19: ['none'],
     q20: ['chat'], q21: 'monthly', q22: 'c', q23: 'c', q24: 'b', q25: 'a', q26: ['none'],
     q27: 'a', q28: 'a', q29: 'a',
     q30: 'a', q31: 'a', q32: 'a', q33: 'a', q34: ['none'],
@@ -29,12 +29,13 @@ function ideal() {
 function mix(over) { var a = ideal(); Object.keys(over).forEach(function (k) { a[k] = over[k]; }); return a; }
 
 console.log('Пример из ТЗ');
-test('чек 50 000: 18 продаж, 60 диалогов, охват 700, 9%', function () {
+test('чек 50 000, налоги и комиссии 10%: 20 продаж, 67 диалогов, охват 700, 10%', function () {
   var k = L.calc(mix({ q23: 'b' }));
-  assert.strictEqual(k.sales, 18);
-  assert.strictEqual(k.dialogs, 60);
+  assert.strictEqual(k.net, 45000);
+  assert.strictEqual(k.sales, 20);
+  assert.strictEqual(k.dialogs, 67);
   assert.strictEqual(k.reach, 700);
-  assert.strictEqual(Math.round(k.share * 100), 9);
+  assert.strictEqual(Math.round(k.share * 100), 10);
 });
 test('потери в переписке 62 500 → 60 000 ₽', function () {
   assert.strictEqual(L.calc(mix({ q23: 'b' })).lossDm, 60000);
@@ -42,7 +43,7 @@ test('потери в переписке 62 500 → 60 000 ₽', function () {
 test('вывод 2: цель реальна на текущей аудитории', function () {
   var t = plain(L.insight('insight2', ideal()).text);
   assert.ok(/Тебя видят около 700 человек/.test(t), t);
-  assert.ok(/около 50 000 ₽ для \$10 000 нужно 18 продаж/.test(t), t);
+  assert.ok(/около 50 000 ₽ для \$10 000 нужно 20 продаж в месяц с учётом налогов и комиссий платёжек/.test(t), t);
   assert.ok(/это реально/.test(t), t);
 });
 
@@ -71,6 +72,21 @@ test('максимумы зон по показанным вопросам', fun
 test('q11 добавляет максимум органике, только если есть ролики', function () {
   assert.strictEqual(L.zoneStats(mix({ q8: ['instagram', 'reels'], q11: 'a' })).ORG.max, 9);
 });
+test('q16: несколько вариантов, минус только за «ничего»', function () {
+  assert.strictEqual(L.Q.q16.type, 'multi');
+  assert.strictEqual(L.zoneStats(mix({ q16: ['a', 'c'] })).PROD.minus, 0);
+  var s = L.zoneStats(mix({ q16: ['e'] }));
+  assert.strictEqual(s.PROD.minus, 1);
+  assert.strictEqual(s.SALES.minus, 1);
+});
+test('без налогов и комиссий расчёт как в исходном ТЗ', function () {
+  var keep = D.config.FEES_RATE;
+  D.config.FEES_RATE = 0;
+  var k = L.calc(ideal());
+  D.config.FEES_RATE = keep;
+  assert.strictEqual(k.sales, 18);
+  assert.strictEqual(k.dialogs, 60);
+});
 test('правила q14 и q35', function () {
   assert.strictEqual(L.zoneStats(mix({ q14: ['consult', 'packs'] })).PROD.minus, 2);
   assert.strictEqual(L.zoneStats(mix({ q14: ['consult', 'course'] })).PROD.minus, 0);
@@ -82,7 +98,7 @@ test('правила q14 и q35', function () {
 console.log('Главная утечка в каждой зоне');
 var worst = {
   SALES: { q13: 'unknown', q20: ['wait'], q23: 'a', q24: 'a', q25: 'c', q26: ['a', 'b'] },
-  PROD: { q14: ['consult'], q15: 'a', q16: 'e', q17: 'c', q18: 'c', q19: ['a', 'b'] },
+  PROD: { q14: ['consult'], q15: 'a', q16: ['e'], q17: 'c', q18: 'c', q19: ['a', 'b'] },
   BASE: { q18: 'b', q27: 'd', q28: 'c', q29: 'c' },
   CONT: { q12: 'd', q29: 'c', q30: 'c', q31: 'd', q32: 'c', q33: 'c', q34: ['a', 'b'] },
   ORG: { q35: ['none'], q36: 'a', q42: ['a'] },
@@ -125,11 +141,11 @@ test('продажи: маленькие потери заменяются ци�
   assert.strictEqual(r.main, 'SALES');
   assert.ok(/диалогов в месяц/.test(plain(r.figure)), plain(r.figure));
 });
-test('продукт: чек до 10 тысяч → 129 продаж', function () {
+test('продукт: чек до 10 тысяч → 143 продажи', function () {
   var r = L.result(mix(worst.PROD));
-  assert.strictEqual(r.calc.sales, 129);
-  assert.strictEqual(r.calc.dialogs, 430);
-  assert.ok(/При чеке около 7 000 ₽ для \$10 000 нужно 129 продаж в месяц/.test(plain(r.figure)), plain(r.figure));
+  assert.strictEqual(r.calc.sales, 143);
+  assert.strictEqual(r.calc.dialogs, 477);
+  assert.ok(/При чеке около 7 000 ₽ для \$10 000 нужно 143 продажи в месяц/.test(plain(r.figure)), plain(r.figure));
 });
 test('база: 30 клиентов × 5% × 50 000 = 75 000 ₽', function () {
   var r = L.result(mix(worst.BASE));
@@ -143,7 +159,7 @@ test('база: маленькая сумма заменяется цифрой 
 });
 test('цифра пути с долей аудитории', function () {
   var r = L.result(mix(worst.CONT));
-  assert.ok(/нужно 18 продаж и около 60 диалогов в месяц\. Это 9% твоей аудитории/.test(plain(r.figure)), plain(r.figure));
+  assert.ok(/нужно 20 продаж и около 67 диалогов в месяц\. Это 10% твоей аудитории/.test(plain(r.figure)), plain(r.figure));
 });
 test('охват 0: блога нет', function () {
   var a = mix(Object.assign({}, worst.ORG, { q8: ['none'], q9: undefined, q10: undefined, q13: 'recom' }));

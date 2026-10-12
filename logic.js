@@ -131,7 +131,9 @@
       hasBlog: asArray(a.q8).length > 0 && asArray(a.q8).indexOf('none') < 0
     };
     if (check) {
-      r.sales = ceilSafe(target / check);
+      // с продажи до эксперта доходит чек за вычетом налогов и комиссий платёжек
+      r.net = Math.round(check * (1 - (C.FEES_RATE || 0)));
+      r.sales = ceilSafe(target / r.net);
       r.dialogs = ceilSafe(r.sales / C.BENCH_CONV);
       if (reach > 0) r.share = r.dialogs / reach;
       if (clients != null) r.baseMoney = floorTo(Math.round(clients * check * C.BASE_REPEAT));

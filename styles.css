@@ -468,6 +468,7 @@ textarea.field { resize: vertical; min-height: 96px; }
 .shot img + img { margin-top: 6px; }
 .shot figcaption { margin-top: 8px; color: #7A6058; font-size: 13.5px; font-weight: 700; text-align: center; }
 
+.case__text + .case__text { margin-top: 12px; }
 .case__text {
   margin-top: 18px;
   font-size: 17px;

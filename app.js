@@ -316,7 +316,7 @@
         }).join('') +
           (s.caption ? '<figcaption>' + tx(s.caption) + '</figcaption>' : '') + '</figure>';
       }).join('') +
-      (c.text ? '<p class="case__text">' + tx(c.text) + '</p>' : '') + '</main>' +
+      [].concat(c.text || []).map(function (p) { return '<p class="case__text">' + tx(p) + '</p>'; }).join('') + '</main>' +
       foot(D.buttons.next) + '</div>';
   }
 
