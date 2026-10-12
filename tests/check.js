@@ -20,7 +20,7 @@ function ideal() {
     q8: ['instagram', 'telegram'], q9: 'c', q10: 'b', q12: 'a', q13: 'instagram',
     q14: ['support', 'course'], q15: 'c', q16: ['a'], q17: 'a', q18: 'a', q19: ['none'],
     q20: ['chat'], q21: 'monthly', q22: 'c', q23: 'c', q24: 'b', q25: 'a', q26: ['none'],
-    q27: 'a', q28: 'a', q29: 'a',
+    q27: 'a', q28: 'a', q29: ['a'],
     q30: 'a', q31: 'a', q32: 'a', q33: 'a', q34: ['none'],
     q35: ['reels'], q36: 'c',
     q37: ['assistant'], q38: 'c', q39: 'a', q40: 'a', q41: 'a', q42: ['a']
@@ -87,6 +87,21 @@ test('без налогов и комиссий расчёт как в исхо�
   assert.strictEqual(k.sales, 18);
   assert.strictEqual(k.dialogs, 60);
 });
+test('q29: баллы и цитата по сочетанию вариантов', function () {
+  function st(sel) { return L.zoneStats(mix({ q29: sel })); }
+  assert.strictEqual(L.Q.q29.type, 'multi');
+  assert.strictEqual(st(['a']).CONT.minus, 0);
+  assert.strictEqual(st(['b', 'c', 'd']).CONT.minus, 0);
+  assert.strictEqual(st(['c']).CONT.minus, 1);
+  assert.strictEqual(st(['c', 'd']).CONT.minus, 1);
+  assert.strictEqual(st(['d']).BASE.minus, 0);
+  assert.strictEqual(st(['e']).CONT.minus, 2);
+  assert.strictEqual(st(['e']).BASE.minus, 1);
+  var q = function (sel) { return st(sel).CONT.top.map(function (x) { return x.text; }); };
+  assert.deepStrictEqual(q(['c', 'd']), ['Изучаю аудиторию только по комментариям и через нейросети']);
+  assert.deepStrictEqual(q(['e']), ['Никак: пишу для всех сразу']);
+  assert.deepStrictEqual(q(['a', 'd']), []);
+});
 test('правила q14 и q35', function () {
   assert.strictEqual(L.zoneStats(mix({ q14: ['consult', 'packs'] })).PROD.minus, 2);
   assert.strictEqual(L.zoneStats(mix({ q14: ['consult', 'course'] })).PROD.minus, 0);
@@ -99,8 +114,8 @@ console.log('Главная утечка в каждой зоне');
 var worst = {
   SALES: { q13: 'unknown', q20: ['wait'], q23: 'a', q24: 'a', q25: 'c', q26: ['a', 'b'] },
   PROD: { q14: ['consult'], q15: 'a', q16: ['e'], q17: 'c', q18: 'c', q19: ['a', 'b'] },
-  BASE: { q18: 'b', q27: 'd', q28: 'c', q29: 'c' },
-  CONT: { q12: 'd', q29: 'c', q30: 'c', q31: 'd', q32: 'c', q33: 'c', q34: ['a', 'b'] },
+  BASE: { q18: 'b', q27: 'd', q28: 'c', q29: ['e'] },
+  CONT: { q12: 'd', q29: ['e'], q30: 'c', q31: 'd', q32: 'c', q33: 'c', q34: ['a', 'b'] },
   ORG: { q35: ['none'], q36: 'a', q42: ['a'] },
   SIST: { q7: 'zero', q21: 'need', q37: ['none'], q38: 'a', q39: 'over20', q40: 'squeezed', q41: 'c', q42: ['d', 'e'] }
 };
@@ -251,7 +266,7 @@ test('эксперт: условия показа вопросов', function ()
 });
 test('q13: площадки из q8 плюс два постоянных варианта', function () {
   var o = L.optionsFor(L.Q.q13, ideal()).map(function (x) { return x.text; });
-  assert.deepStrictEqual(o, ['Instagram', 'Телеграм-канал', 'по рекомендациям', 'не знаю']);
+  assert.deepStrictEqual(o, ['Instagram', 'Телеграм-канал', 'По рекомендациям: меня советуют знакомым', 'Не знаю: люди приходят, а откуда, я не отслеживаю']);
   assert.strictEqual(L.optionsFor(L.Q.q13, mix({ q8: ['none'] })).length, 2);
 });
 test('продюсер с проектом идёт по обычному тесту', function () {
@@ -266,7 +281,7 @@ test('продюсер без проекта: три вопроса и свой 
   var r = L.result(a);
   assert.ok(r.producer);
   assert.strictEqual(r.title, 'Олег, твои $10 000 начинаются с первого проекта');
-  assert.deepStrictEqual(r.quotes.map(function (q) { return q.text; }), ['не знаю, где искать экспертов', 'нет кейсов']);
+  assert.deepStrictEqual(r.quotes.map(function (q) { return q.text; }), ['Не знаю, где искать экспертов', 'Нет кейсов, а без них никто не берёт']);
 });
 test('ответы словами для таблицы', function () {
   var t = L.answersText(mix({ q3: 'other', q3_other: 'садоводство' }));

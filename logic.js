@@ -60,7 +60,7 @@
     sel.forEach(function (o) { if (o.minus) out.push({ text: o.text, minus: o.minus }); });
     (q.rules || []).forEach(function (r) {
       if (sel.length && sel.every(function (o) { return r.onlyFrom.indexOf(o.id) >= 0; })) {
-        out.push({ text: sel.map(function (o) { return o.text; }).join(', '), minus: r.minus });
+        out.push({ text: r.quote || sel.map(function (o) { return o.text; }).join(', '), minus: r.minus });
       }
     });
     return out;
