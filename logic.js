@@ -151,8 +151,8 @@
       // доли считаем в целых процентах, чтобы не терять копейки на дробях
       var base = null;
       if (clients != null) {
-        // в базе: повторные покупки прошлых клиентов и возврат тех, кто писал и не купил
-        base = Math.round(clients * check * C.BASE_REPEAT);
+        // в базе: повторные покупки клиентов за год (клиенты за месяц × BASE_MONTHS) и возврат тех, кто писал и не купил
+        base = Math.round(clients * (C.BASE_MONTHS || 1) * check * C.BASE_REPEAT);
         if (writers != null && conv != null) {
           base += Math.round(writers * Math.round((1 - conv) * 100) * 12 * check * C.LOST_RETURN / 100);
         }
@@ -242,7 +242,7 @@
     var k = calc(a);
     var v = vars(a, k);
     var tpl;
-    if (id === 'insight1') tpl = a.q5 && a.q5 !== 'a' ? T.many : T.few;
+    if (id === 'insight1') tpl = k.clients != null && k.clients >= C.CLIENTS_MANY ? T.many : T.few;
     else if (id === 'insight2') {
       if (k.reach === 0) tpl = k.hasBlog ? T.noReach : T.noBlog;
       else tpl = k.share <= C.REACH_SHARE_OK ? T.ok : T.over;
@@ -302,7 +302,7 @@
       .filter(function (z) { return stats[z].health >= 6; })
       .slice(0, 2)
       .map(function (z) { return R.zones[z].strong; });
-    if (a.q5 && a.q5 !== 'a') have.push(cap(fill(R.have.clients, v)));
+    if (k.clients != null && k.clients >= C.CLIENTS_MANY) have.push(fill(R.have.clients, v));
     if (a.q22 && a.q22 !== 'a') have.push(fill(R.have.writers, v));
     if (k.reach > 0) have.push(fill(R.have.reach, v));
     have = have.slice(0, 3);
@@ -373,6 +373,7 @@
     result: result,
     answersText: answersText,
     money: money,
+    roundTo: roundTo,
     fill: fill,
     cond: cond
   };

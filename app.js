@@ -176,6 +176,14 @@
     if (i > 0) go(list[i - 1]);
   }
 
+  // обязательное текстовое поле заполнено? (текстовый вопрос или поле «Другое»)
+  function filled(q) {
+    var a = state.answers;
+    if (q.type === 'text') return !q.required || String(a[q.id] || '').trim() !== '';
+    var need = L.selected(q, a).filter(function (o) { return o.input && o.inputRequired; })[0];
+    return !need || String(a[q.id + '_other'] || '').trim() !== '';
+  }
+
   function restart() {
     if (!window.confirm('Начать тест заново? Ответы сотрутся.')) return;
     var utm = state.utm;
@@ -261,8 +269,10 @@
       html += '<input class="field" type="text" data-text="' + q.id + '" maxlength="160" value="' + esc(val) + '"' +
         ' placeholder="' + esc(q.placeholder || '') + '" autocomplete="' + (q.id === 'q1' ? 'given-name' : 'off') + '"' +
         ' enterkeyhint="next" aria-label="' + esc(q.title) + '">';
-      if (!q.required) html += '<p class="q__hint">' + tx(D.hints.optional) + '</p>';
-      html += '</main>' + foot(!q.required && !val.trim() ? D.buttons.skip : D.buttons.next, q.required && !val.trim());
+      html += q.required ? '<p class="q__err" data-err hidden>' + tx(D.hints.requiredError) + '</p>'
+        : '<p class="q__hint">' + tx(D.hints.optional) + '</p>';
+      // кнопка активна всегда: на пустом обязательном поле она показывает подсказку и не пускает дальше
+      html += '</main>' + foot(!q.required && !val.trim() ? D.buttons.skip : D.buttons.next);
       return html + '</div>';
     }
 
@@ -286,6 +296,7 @@
       html += '<input class="field field--other" type="text" data-text="' + q.id + '_other" maxlength="120"' +
         ' value="' + esc(a[q.id + '_other'] || '') + '" placeholder="' + esc(otherOn.placeholder || '') + '"' +
         ' enterkeyhint="next" aria-label="' + esc(otherOn.placeholder || otherOn.text) + '">';
+      if (otherOn.inputRequired) html += '<p class="q__err" data-err hidden>' + tx(D.hints.requiredError) + '</p>';
     }
     html += '</main>';
     // у вопроса с одним вариантом кнопка нужна, только если ответ уже есть (вернулись назад)
@@ -481,10 +492,16 @@
         }
         html += '</div><div class="scale__ends"><span>' + tx(fd.minLabel) + '</span><span>' + tx(fd.maxLabel) + '</span></div>';
       } else if (fd.type === 'area') {
-        html += '<label>' + lab + '<textarea class="field" rows="3" maxlength="1500" data-form="' + fd.id + '">' + esc(v) + '</textarea></label>';
+        html += '<label>' + lab + '<textarea class="field" rows="3" maxlength="1500" data-form="' + fd.id + '"' +
+          ' placeholder="' + esc(fd.placeholder || '') + '">' + esc(v) + '</textarea></label>';
       } else {
+        var off = fd.none && f[fd.none.id];
         html += '<label>' + lab + '<input class="field" type="text" maxlength="200" data-form="' + fd.id + '" value="' + esc(v) + '"' +
-          ' placeholder="' + esc(fd.placeholder || '') + '" autocapitalize="off" autocomplete="off"></label>';
+          ' placeholder="' + esc(fd.placeholder || '') + '" autocapitalize="off" autocomplete="off"' + (off ? ' disabled' : '') + '></label>';
+        if (fd.none) {
+          html += '<label class="consent consent--mini"><input type="checkbox" data-form="' + fd.none.id + '" data-none-for="' + fd.id + '"' +
+            (off ? ' checked' : '') + '><span class="consent__box">' + CHECK + '</span><span>' + tx(fd.none.label) + '</span></label>';
+        }
       }
       html += '<p class="form__err" hidden>' + tx(fd.error || '') + '</p></div>';
     });
@@ -607,7 +624,7 @@
     var firstBad = null;
     F.fields.forEach(function (fd) {
       var v = String(f[fd.id] == null ? '' : f[fd.id]).trim();
-      var bad = fd.required && !v;
+      var bad = fd.required && !v && !(fd.none && f[fd.none.id]);
       showErr(fd.id, bad);
       if (bad && !firstBad) firstBad = fd.id;
     });
@@ -631,7 +648,8 @@
 
     var row = baseRow();
     row['Ник в Телеграме'] = f.tg;
-    row['Ссылка на блог'] = f.blog || '';
+    var blogField = F.fields.filter(function (x) { return x.id === 'blog'; })[0];
+    row['Ссылка на блог'] = blogField.none && f[blogField.none.id] ? blogField.none.value : (f.blog || '');
     row['Что разобрать'] = f.want || '';
     row['Что пробовал(а)'] = f.tried || '';
     row['Почему сейчас'] = f.why || '';
@@ -681,6 +699,13 @@
       if (t.disabled || busy) return;
       var cur = L.Q[state.screen];
       if (cur && cur.type === 'text') state.answers[cur.id] = String(state.answers[cur.id] || '').trim();
+      if (cur && !filled(cur)) {
+        var err = root.querySelector('[data-err]');
+        var fld = root.querySelector('[data-text]');
+        if (err) err.hidden = false;
+        if (fld) { fld.classList.add('is-bad'); fld.focus(); }
+        return;
+      }
       next();
     }
     else if (act === 'cta') { track('cta'); go('form'); }
@@ -696,16 +721,21 @@
       save();
       var q = L.Q[key];
       var btn = root.querySelector('.foot .btn');
-      if (q && btn) {
-        var empty = !t.value.trim();
-        btn.disabled = q.required && empty;
-        btn.textContent = typo(!q.required && empty ? D.buttons.skip : D.buttons.next);
-      }
+      if (q && btn && !q.required) btn.textContent = typo(!t.value.trim() ? D.buttons.skip : D.buttons.next);
+      var err = root.querySelector('[data-err]');
+      if (err && t.value.trim()) { err.hidden = true; t.classList.remove('is-bad'); }
     } else if (t.hasAttribute('data-form')) {
       var id = t.getAttribute('data-form');
       state.form[id] = t.type === 'checkbox' ? t.checked : t.value;
       save();
       showErr(id, false);
+      // галочка «нет»: поле рядом выключается и перестаёт быть обязательным
+      var forId = t.getAttribute('data-none-for');
+      if (forId) {
+        var target = root.querySelector('[data-form="' + forId + '"]');
+        if (target) target.disabled = t.checked;
+        showErr(forId, false);
+      }
     }
   });
 

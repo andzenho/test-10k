@@ -14,6 +14,7 @@ Sheet.prototype.getLastColumn = function () {
 };
 Sheet.prototype.appendRow = function (a) { this.rows.push(a.slice()); };
 Sheet.prototype.setFrozenRows = function () {};
+Sheet.prototype.deleteRow = function (r) { this.rows.splice(r - 1, 1); };
 Sheet.prototype.getMaxColumns = function () { return 1000; };
 Sheet.prototype.getMaxRows = function () { return 100000; };
 Sheet.prototype.insertColumnsAfter = function () {};
@@ -155,6 +156,30 @@ assert.strictEqual(sheets['Прохождения'].rows.length, 3);
 assert.strictEqual(sent.length, 1);
 assert.strictEqual(sheets['События'].rows.length, 1 + 7);
 assert.strictEqual(post({ step: 'open', row: {} }).ok, false, 'без ID строка не создаётся');
+
+// формулировку вопроса поменяли: ответ идёт в тот же столбец, заголовок обновился
+var before = sheets['Прохождения'].rows[0].length;
+assert.ok(post({ sid: 'a1', step: 'result', stepNo: 11, row: { 'Q7. Как сейчас ведёт себя твой доход?': 'стабильный' } }).ok);
+var h2 = sheets['Прохождения'].rows[0];
+assert.strictEqual(h2.length, before, 'новый столбец не появился');
+assert.ok(h2.indexOf('Q7. Как сейчас ведёт себя твой доход?') >= 0 && h2.indexOf('Q7. Как ведёт себя твой доход?') < 0);
+assert.strictEqual(rowOf('a1')['Q7. Как сейчас ведёт себя твой доход?'], 'стабильный');
+
+// проверочные строки: посмотреть и убрать можно только их
+assert.strictEqual(post({ sid: 'a1', action: 'peek' }).ok, false);
+assert.strictEqual(post({ sid: 'a1', action: 'cleanup' }).ok, false);
+assert.ok(post({ sid: 'proverka-x', step: 'result', stepNo: 11, row: { 'Имя': 'Тест', 'Этап': 'Пора расти' } }).ok);
+assert.ok(post({ sid: 'proverka-x', step: 'form', stepNo: 13, row: { 'Ник в Телеграме': '@test_x', 'Ссылка на блог': 'блога нет' } }).ok);
+var peek = post({ sid: 'proverka-x', action: 'peek' });
+assert.strictEqual(peek.main['Этап'], 'Пора расти');
+assert.strictEqual(peek.lead['Ссылка на блог'], 'блога нет');
+assert.strictEqual(peek.mainRows, 1);
+assert.strictEqual(peek.events, 2);
+var cleaned = post({ sid: 'proverka-x', action: 'cleanup' });
+assert.deepStrictEqual([cleaned.main, cleaned.lead, cleaned.events], [1, 1, 2]);
+assert.strictEqual(post({ sid: 'proverka-x', action: 'peek' }).main, null);
+assert.strictEqual(leadRows().length, 1, 'настоящая заявка осталась');
+assert.strictEqual(rowOf('a1')['Имя'], 'Аня');
 
 // заголовки не дублируются
 var head = sheets['Прохождения'].rows[0];

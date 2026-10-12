@@ -330,6 +330,9 @@ h1:focus { outline: none; }
   line-height: 1.35;
 }
 .q__hint.is-warn { animation: shake .35s ease; }
+.q__err { margin-top: 10px; color: #FFB9A8; font-size: 14.5px; font-weight: 600; line-height: 1.35; }
+.field.is-bad { border-color: #FF9C88; }
+.field:disabled { opacity: .45; }
 @keyframes shake {
   25% { transform: translateX(-5px); }
   75% { transform: translateX(5px); }
@@ -750,6 +753,8 @@ textarea.field { resize: vertical; min-height: 96px; }
 .consent input:checked + .consent__box { background: var(--gold); color: var(--ink); }
 .consent input:focus-visible + .consent__box { outline: 3px solid var(--hero); outline-offset: 3px; }
 .consent a { color: var(--gold); text-underline-offset: 3px; }
+.consent--mini { margin-top: 12px; align-items: center; }
+.consent--mini .consent__box { width: 24px; height: 24px; border-radius: 7px; }
 
 /* ---------- Спасибо ---------- */
 

@@ -18,7 +18,7 @@
  *   TG_CHAT_ID   — куда слать заявки (свой id или id чата)
  */
 
-var VERSION = 3;
+var VERSION = 4;
 // оформление накатывается заново, только когда меняется это число
 var LAYOUT_VERSION = 2;
 var SHEET_MAIN = 'Прохождения';
@@ -109,6 +109,8 @@ function doPost(e) {
     var row = data.row && typeof data.row === 'object' ? data.row : {};
 
     ensureLayout();
+    // служебные действия для проверок: работают только со строками, чей ID начинается с «proverka-»
+    if (data.action === 'peek' || data.action === 'cleanup') return json(testTools(data.action, sid));
     var sheet = getSheet(SHEET_MAIN, HEAD);
     var headers = headersOf(sheet);
     var r = findRow(sheet, 1, sid);
@@ -130,6 +132,20 @@ function doPost(e) {
       values['Шаг №'] = stepNo;
       values['Последний шаг'] = stepName(step);
     }
+
+    // ответ на вопрос ищем по его номеру («Q5.»): если формулировку вопроса поменяли,
+    // ответы идут в тот же столбец, а заголовок обновляется под новый текст
+    Object.keys(values).forEach(function (key) {
+      var m = /^([QP]\d+[a-z]?\.) /i.exec(key);
+      if (!m || headers.indexOf(key) >= 0) return;
+      for (var i = 0; i < headers.length; i++) {
+        if (String(headers[i]).indexOf(m[1] + ' ') === 0) {
+          sheet.getRange(1, i + 1).setValue(key);
+          headers[i] = key;
+          return;
+        }
+      }
+    });
 
     // новые колонки добавляем разом, строку пишем одним действием: так запрос идёт секунду, а не шесть
     var fresh = Object.keys(values).filter(function (key) { return headers.indexOf(key) < 0; })
@@ -190,6 +206,46 @@ function relayout() {
 /** Проверка уведомления: запустить вручную после того, как заданы свойства скрипта. */
 function testNotify() {
   sendTelegram('Проверка: уведомления теста «Где твои $10 000» подключены.');
+}
+
+/* ---------- Проверочные строки ---------- */
+
+// peek — показать, что записалось по проверочному ID; cleanup — убрать все проверочные строки.
+// Настоящие ID случайные и с «proverka» не начинаются, чужие данные так не достать и не стереть.
+function testTools(action, sid) {
+  if (sid.indexOf('proverka-') !== 0) return { ok: false, error: 'только для проверочных строк' };
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var out = { ok: true };
+  [[SHEET_MAIN, 'main'], [SHEET_LEADS, 'lead'], [SHEET_EVENTS, 'events']].forEach(function (pair) {
+    var sheet = ss.getSheetByName(pair[0]);
+    if (!sheet || sheet.getLastRow() < 2) { out[pair[1]] = action === 'peek' ? null : 0; return; }
+    var headers = headersOf(sheet);
+    var idCol = headers.indexOf('ID');
+    var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).getValues();
+    if (action === 'cleanup') {
+      var removed = 0;
+      for (var i = data.length - 1; i >= 0; i--) {
+        if (String(data[i][idCol]).indexOf('proverka') === 0) { sheet.deleteRow(i + 2); removed++; }
+      }
+      out[pair[1]] = removed;
+      return;
+    }
+    var rows = data.filter(function (r) { return String(r[idCol]) === sid; });
+    if (pair[1] === 'events') { out.events = rows.length; return; }
+    out[pair[1] + 'Rows'] = rows.length;
+    out[pair[1]] = rows.length ? toObject(headers, rows[0]) : null;
+  });
+  return out;
+}
+
+function toObject(headers, row) {
+  var o = {};
+  headers.forEach(function (h, i) {
+    var v = row[i];
+    if (v === '' || v == null) return;
+    o[h] = Object.prototype.toString.call(v) === '[object Date]' ? v.toISOString() : v;
+  });
+  return o;
 }
 
 /* ---------- Лист «Лиды» ---------- */
