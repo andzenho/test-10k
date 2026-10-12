@@ -14,6 +14,10 @@ Sheet.prototype.getLastColumn = function () {
 };
 Sheet.prototype.appendRow = function (a) { this.rows.push(a.slice()); };
 Sheet.prototype.setFrozenRows = function () {};
+Sheet.prototype.getMaxColumns = function () { return 1000; };
+Sheet.prototype.getMaxRows = function () { return 100000; };
+Sheet.prototype.insertColumnsAfter = function () {};
+Sheet.prototype.insertRowsAfter = function () {};
 Sheet.prototype.setColumnWidth = function () {};
 Sheet.prototype.getRange = function (r, c, nr, nc) {
   var s = this; nr = nr || 1; nc = nc || 1;
@@ -57,11 +61,18 @@ var ctx = {
   } },
   LockService: { getScriptLock: function () { return { waitLock: function () {}, releaseLock: function () {} }; } },
   ContentService: { MimeType: { JSON: 'json' }, createTextOutput: function (s) { return { setMimeType: function () { return JSON.parse(s); } }; } },
-  PropertiesService: { getScriptProperties: function () { return { getProperty: function (k) { return props[k]; } }; } },
+  PropertiesService: { getScriptProperties: function () { return {
+    getProperty: function (k) { return props[k] == null ? null : props[k]; },
+    setProperty: function (k, v) { props[k] = v; },
+    deleteProperty: function (k) { delete props[k]; }
+  }; } },
   UrlFetchApp: { fetch: function (url, o) { sent.push({ url: url, body: JSON.parse(o.payload) }); } }
 };
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../integrations/google-sheets/Code.gs'), 'utf8'), ctx);
+
+// оформление на подставной таблице не проверить: считаем, что оно уже накатано
+props.LAYOUT = String(ctx.LAYOUT_VERSION);
 
 function post(p) { return ctx.doPost({ postData: { contents: JSON.stringify(p) } }); }
 function rowOf(sid) {
@@ -72,7 +83,10 @@ function rowOf(sid) {
   return out;
 }
 
-assert.deepStrictEqual(ctx.doGet(), { ok: true, 'версия': 1 });
+var pong = ctx.doGet();
+assert.strictEqual(pong.ok, true);
+assert.strictEqual(pong['версия'], ctx.VERSION);
+assert.strictEqual(pong['оформление'], String(ctx.LAYOUT_VERSION));
 
 assert.ok(post({ sid: 'a1', step: 'open', stepNo: 1, row: { 'Имя': '', utm_source: 'tg' } }).ok);
 assert.ok(post({ sid: 'a1', step: 'block2', stepNo: 4, row: { 'Имя': 'Аня' } }).ok);
@@ -90,7 +104,7 @@ assert.strictEqual(r.utm_source, 'tg');
 
 assert.ok(post({ sid: 'a1', step: 'result', stepNo: 11, row: {
   'Имя': 'Аня', 'Ветка': 'эксперт', 'Этап': 'Случайные деньги', 'Главная точка роста': 'Продажи', 'Потенциал, ₽ в месяц': 430000,
-  'Здоровье: Продажи': 2, 'Q7. Как ведёт себя твой доход?': 'скачет от месяца к месяцу',
+  'Здоровье: Продажи': 2, 'Q7. Как ведёт себя твой доход?': 'скачет от месяца к месяцу', 'Q3. Твоя ниша': 'Коучинг',
   'Q4. Чем ты помогаешь людям? В двух словах': '=HYPERLINK("http://x")', 'ID': 'подмена', 'Шаг №': 99
 } }).ok);
 r = rowOf('a1');
@@ -99,6 +113,7 @@ assert.strictEqual(r['Здоровье: Продажи'], 2);
 assert.strictEqual(r['Q4. Чем ты помогаешь людям? В двух словах'], '\'=HYPERLINK("http://x")', 'формула должна стать текстом');
 assert.strictEqual(r['Шаг №'], 11, 'служебные колонки со страницы не перезаписываются');
 assert.strictEqual(sent.length, 0, 'до заявки уведомлений нет');
+assert.ok(!sheets['Лиды'] || sheets['Лиды'].rows.length <= 1, 'до заявки на листе «Лиды» пусто');
 
 assert.ok(post({ sid: 'a1', step: 'form', stepNo: 13, notify: true, row: {
   'Имя': 'Аня', 'Ник в Телеграме': '@anya', 'Что разобрать': 'продажи в переписке', 'Готовность': 8
@@ -109,22 +124,49 @@ var text = sent[0].body.text;
 ['Имя: Аня', 'Ник: @anya', 'Главная точка роста: Продажи', 'Потенциал: 430000', 'Этап: Случайные деньги', 'Готовность: 8 из 10', 'Что хочет разобрать: продажи в переписке']
   .forEach(function (s) { assert.ok(text.indexOf(s) >= 0, 'в уведомлении нет: ' + s + '\n' + text); });
 
+// заявка попала на лист «Лиды»: одна строка, статус «Новая», ниша из ответа Q3
+function leadRows() {
+  var L = sheets['Лиды'], h = L.rows[0];
+  return L.rows.slice(1).map(function (r) { var o = {}; h.forEach(function (k, i) { o[k] = r[i] == null ? '' : r[i]; }); return o; });
+}
+var leads = leadRows();
+assert.strictEqual(leads.length, 1);
+assert.strictEqual(leads[0]['Имя'], 'Аня');
+assert.strictEqual(leads[0]['Ник в Телеграме'], '@anya');
+assert.strictEqual(leads[0]['Статус'], 'Новая');
+assert.strictEqual(leads[0]['Ниша'], 'Коучинг');
+assert.strictEqual(leads[0]['Главная точка роста'], 'Продажи');
+assert.strictEqual(leads[0]['Потенциал, ₽ в месяц'], 430000);
+assert.strictEqual(leads[0]['ID'], 'a1');
+// человек руками поставил статус и комментарий; повторная заявка их не затирает и строку не дублирует
+var LS = sheets['Лиды'], lh = LS.rows[0];
+LS.rows[1][lh.indexOf('Статус')] = 'Оплачено';
+LS.rows[1][lh.indexOf('Комментарий')] = 'оплата 23.08';
+assert.ok(post({ sid: 'a1', step: 'form', stepNo: 13, row: { 'Что разобрать': 'продажи и база' } }).ok);
+leads = leadRows();
+assert.strictEqual(leads.length, 1);
+assert.strictEqual(leads[0]['Статус'], 'Оплачено');
+assert.strictEqual(leads[0]['Комментарий'], 'оплата 23.08');
+assert.strictEqual(leads[0]['Что разобрать'], 'продажи и база');
+
 // второй человек — вторая строка; уведомление без шага «заявка» не уходит
 assert.ok(post({ sid: 'b2', step: 'open', stepNo: 1, notify: true, row: {} }).ok);
 assert.strictEqual(sheets['Прохождения'].rows.length, 3);
 assert.strictEqual(sent.length, 1);
-assert.strictEqual(sheets['События'].rows.length, 1 + 6);
+assert.strictEqual(sheets['События'].rows.length, 1 + 7);
 assert.strictEqual(post({ step: 'open', row: {} }).ok, false, 'без ID строка не создаётся');
 
 // заголовки не дублируются
 var head = sheets['Прохождения'].rows[0];
 assert.strictEqual(head.length, new Set(head).size);
-assert.deepStrictEqual(head.slice(0, 6), ['ID', 'Начало', 'Обновлено', 'Последний шаг', 'Шаг №', 'Ветка']);
+assert.deepStrictEqual(head.slice(0, 7), ['ID', 'Начало', 'Имя', 'Ник в Телеграме', 'Последний шаг', 'Шаг №', 'Ветка']);
 
 ctx.setup();
 var f = sheets['Воронка'].rows;
 assert.strictEqual(f.length, 15);
-assert.strictEqual(f[1][1], '=COUNTIF(\'Прохождения\'!E:E;">=1")');
-assert.ok(/COUNTIFS/.test(f[4][1]) && /продюсер без проекта/.test(f[4][1]));
+assert.strictEqual(f[1][1], '=COUNTIF(\'Прохождения\'!F:F;">=1")');
+assert.ok(/COUNTIFS/.test(f[4][1]) && /!G:G;"<>продюсер без проекта"/.test(f[4][1]), f[4][1]);
+assert.strictEqual(ctx.colLetter(27), 'AA');
+assert.strictEqual(ctx.colLetter(52), 'AZ');
 
 console.log('Приёмник таблицы: все проверки пройдены');
