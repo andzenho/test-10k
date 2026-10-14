@@ -187,6 +187,19 @@ assert.strictEqual(post({ sid: 'proverka-x', action: 'peek' }).main, null);
 assert.strictEqual(leadRows().length, 1, 'настоящая заявка осталась');
 assert.strictEqual(rowOf('a1')['Имя'], 'Аня');
 
+// продюсер без проекта: этапа и дохода нет, на листе «Лиды» его ветка и три продюсерских ответа
+assert.ok(post({ sid: 'p3', step: 'result', stepNo: 11, row: {
+  'Имя': 'Боря', 'Ветка': 'продюсер без проекта', 'P1. Сколько проектов у тебя уже было?': '1–2',
+  'P2. Что мешает найти проект?': 'Нет кейсов, а без них никто не берёт', 'P3. Что у тебя получается лучше всего?': 'продажи'
+} }).ok);
+assert.ok(post({ sid: 'p3', step: 'form', stepNo: 13, row: { 'Ник в Телеграме': '@borya_p' } }).ok);
+var pl = leadRows().filter(function (x) { return x['ID'] === 'p3'; })[0];
+assert.strictEqual(pl['Ветка'], 'продюсер без проекта');
+assert.strictEqual(pl['Проектов было'], '1–2');
+assert.strictEqual(pl['Что мешает найти проект'], 'Нет кейсов, а без них никто не берёт');
+assert.strictEqual(pl['Сильная сторона'], 'продажи');
+assert.strictEqual(pl['Этап'], '');
+
 // заголовки не дублируются
 var head = sheets['Прохождения'].rows[0];
 assert.strictEqual(head.length, new Set(head).size);
