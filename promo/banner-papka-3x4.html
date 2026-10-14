@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <title>Баннер ПАПКА 3:4</title>
-<!-- Баннер к посту про ПАПКУ: 1080×1440 (3:4). Картинка снимается скриншотом этой страницы в окне 1080×1440. -->
+<!-- Баннер к посту про ПАПКУ: 1080×1440 (3:4). Картинка снимается скриншотом этой страницы в окне 1080×1440.
+     Три зоны без наложения: название сверху, фото посередине, текст и подарок снизу. Всё по центру. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   @font-face { font-family: 'Bebas Neue'; font-weight: 700; src: url(../papka/fonts/BebasNeue-Bold.ttf) format('truetype'); }
   :root {
@@ -15,124 +16,71 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1440px; overflow: hidden; }
   body {
-    position: relative;
-    background: linear-gradient(180deg, var(--wine-top) 0%, var(--wine) 55%, var(--deep) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 72px 72px 80px;
+    background: linear-gradient(180deg, var(--wine-top) 0%, var(--wine) 50%, var(--deep) 100%);
     color: var(--cream);
     font-family: 'Montserrat', system-ui, sans-serif;
+    text-align: center;
     -webkit-font-smoothing: antialiased;
     isolation: isolate;
   }
-  /* фото: по центру, верх и края растворяются в фоне */
-  .photo {
-    position: absolute;
-    left: 50%;
-    top: 330px;
-    /* ширина = ширине фото при этой высоте, тогда края уходят в прозрачность */
-    width: 711px;
-    height: 1110px;
-    transform: translateX(-50%);
-    z-index: -2;
-    background: url(../papka/img/hero.jpg) center top / auto 96% no-repeat;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20%), linear-gradient(to right, transparent 0, #000 20%, #000 80%, transparent 100%);
-    -webkit-mask-composite: source-in;
-    mask-image: linear-gradient(to bottom, transparent 0, #000 20%), linear-gradient(to right, transparent 0, #000 20%, #000 80%, transparent 100%);
-    mask-composite: intersect;
-  }
-  /* затемнение снизу под текст; лицо остаётся открытым */
-  body::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(180deg, rgba(42, 8, 14, 0) 0%, rgba(42, 8, 14, 0) 62%, rgba(42, 8, 14, .86) 76%, var(--deep) 92%);
-  }
-  .top { padding: 64px 72px 0; text-align: center; }
-  .eyebrow {
-    display: inline-block;
-    padding: 12px 26px;
-    border: 2px solid rgba(233, 181, 106, .55);
-    border-radius: 999px;
-    color: var(--gold);
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: .2em;
-    text-transform: uppercase;
-  }
+  /* разрядка добавляет пробел после последней буквы; отступ слева на ту же величину возвращает текст в центр */
+  .spaced { letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
+
   .title {
-    margin-top: 34px;
-    font: 700 372px/.8 'Bebas Neue', Impact, sans-serif;
-    letter-spacing: .01em;
+    font: 700 310px/.8 'Bebas Neue', Impact, sans-serif;
     background: linear-gradient(180deg, #FFF6E6 0%, var(--hero-ink) 45%, #D8B98C 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     filter: drop-shadow(0 14px 40px rgba(0, 0, 0, .4));
   }
-  .by {
-    margin-top: 26px;
-    color: var(--gold);
-    font-size: 34px;
-    font-weight: 800;
-    letter-spacing: .34em;
-    text-transform: uppercase;
-    text-shadow: 0 2px 12px rgba(30, 4, 9, .85);
+  .by { margin-top: 0; color: var(--gold); font-size: 34px; font-weight: 800; }
+
+  /* фото: голова и плечи, края и низ растворяются в фоне, текст на него не заходит */
+  .photo {
+    position: relative;
+    z-index: -1;
+    flex: none;
+    width: 580px;
+    height: 600px;
+    margin-top: -10px;
+    background: url(../papka/img/hero.jpg) center 30% / 580px auto no-repeat;
+    /* овал вокруг головы и плеч: у студийного фона нет прямых краёв */
+    -webkit-mask-image: radial-gradient(ellipse 50% 58% at 50% 42%, #000 50%, transparent 100%);
+    mask-image: radial-gradient(ellipse 50% 58% at 50% 42%, #000 50%, transparent 100%);
   }
-  .bottom {
-    position: absolute;
-    left: 72px;
-    right: 72px;
-    bottom: 72px;
-    text-align: center;
-  }
-  .lead {
-    color: var(--hero-ink);
-    font-size: 54px;
-    font-weight: 800;
-    line-height: 1.18;
-    text-wrap: balance;
-    text-shadow: 0 3px 18px rgba(30, 4, 9, .85);
-  }
-  .lead b { color: var(--gold); font-weight: 800; }
-  .price {
-    margin-top: 18px;
-    color: rgba(248, 239, 226, .82);
-    font-size: 38px;
-    font-weight: 600;
-    text-shadow: 0 2px 12px rgba(30, 4, 9, .85);
-  }
+
+  .lead { margin-top: -24px; color: var(--hero-ink); font-size: 56px; font-weight: 800; line-height: 1.16; }
+  .lead b { color: var(--gold); }
+  .price { margin-top: 16px; color: rgba(248, 239, 226, .8); font-size: 38px; font-weight: 600; }
+
   .gift {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 22px;
-    margin-top: 40px;
-    padding: 26px 30px;
+    margin-top: auto;
+    width: 100%;
+    padding: 30px 32px 32px;
     border: 3px solid rgba(255, 246, 227, .75);
-    border-radius: 34px;
+    border-radius: 36px;
     background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, #D99E4E);
-    box-shadow: 0 0 0 8px rgba(233, 181, 106, .16), 0 22px 60px rgba(233, 181, 106, .4);
+    box-shadow: 0 0 0 8px rgba(233, 181, 106, .16), 0 22px 60px rgba(233, 181, 106, .38);
     color: var(--ink);
-    text-align: left;
   }
-  .gift img { flex: none; width: 92px; height: 92px; }
-  .gift p { font-size: 36px; font-weight: 800; line-height: 1.22; white-space: nowrap; }
-  .gift span { display: block; margin-top: 4px; font-size: 27px; font-weight: 700; opacity: .78; }
+  .gift__tag { font-size: 24px; font-weight: 800; opacity: .7; }
+  .gift p + p { margin-top: 10px; font-size: 40px; font-weight: 800; line-height: 1.2; }
 </style>
 </head>
 <body>
+  <h1 class="title">ПАПКА</h1>
+  <p class="by spaced">от&nbsp;Артёма Пак</p>
   <div class="photo"></div>
-  <div class="top">
-    <p class="eyebrow">Закрытый канал с&nbsp;инструментами</p>
-    <h1 class="title">ПАПКА</h1>
-    <p class="by">от&nbsp;Артёма Пак</p>
-  </div>
-  <div class="bottom">
-    <p class="lead">На&nbsp;чём мои проекты сделали <b>$1&nbsp;млн</b> за&nbsp;2025–2026</p>
-    <p class="price">по&nbsp;цене одной консультации</p>
-    <div class="gift">
-      <img src="../papka/img/icons/dostup.png" alt="">
-      <p>Личная консультация со&nbsp;мной<br>в&nbsp;подарок до&nbsp;31&nbsp;октября</p>
-    </div>
+  <p class="lead">На&nbsp;чём мои проекты сделали<br><b>$1&nbsp;млн</b> за&nbsp;2025–2026</p>
+  <p class="price">по&nbsp;цене одной консультации</p>
+  <div class="gift">
+    <p class="gift__tag spaced">Подарок до&nbsp;31&nbsp;октября</p>
+    <p>Личная консультация со&nbsp;мной</p>
   </div>
 </body>
 </html>
