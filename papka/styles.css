@@ -461,6 +461,50 @@ main > .sec { margin-top: calc(-1 * var(--overlap)); border-radius: var(--overla
 .foot p + p { margin-top: var(--s1); }
 .foot a { color: var(--gold); }
 
+/* ---------- Плашка с отсчётом до конца бонуса ---------- */
+
+.deal {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  width: min(100% - 24px, 560px);
+  padding: 10px 10px 10px var(--s3);
+  transform: translateX(-50%);
+  border: 1px solid rgba(233, 181, 106, .55);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #5A1220, #3A0A12);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .5), 0 0 0 4px rgba(233, 181, 106, .1);
+  color: var(--cream);
+  text-decoration: none;
+}
+.deal[hidden] { display: none; }
+.deal__txt { flex: 1; min-width: 0; line-height: 1.25; }
+.deal__txt b { display: block; color: var(--hero-ink); font-size: 14px; }
+.deal__txt span { display: block; margin-top: 2px; color: var(--gold); font-size: 12px; font-weight: 700; }
+.deal__time { display: flex; flex: none; gap: 4px; }
+.deal__unit {
+  display: grid;
+  justify-items: center;
+  width: 40px;
+  padding: 6px 0 4px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold));
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.deal__unit b { font: 700 22px/1 var(--display); }
+.deal__unit small { margin-top: 1px; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; opacity: .7; }
+/* пока висит плашка, низ страницы не прячется под ней */
+.has-deal .foot { padding-bottom: calc(var(--s5) + 96px); }
+@media (prefers-reduced-motion: no-preference) {
+  .deal { animation: deal-in .45s cubic-bezier(.2, .7, .2, 1) both; }
+}
+@keyframes deal-in { from { opacity: 0; transform: translate(-50%, 130%); } }
+
 /* ---------- Появление при прокрутке ---------- */
 
 @media (prefers-reduced-motion: no-preference) {

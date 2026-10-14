@@ -15,8 +15,8 @@
 <link rel="preload" href="fonts/BebasNeue-Bold.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="img/hero.jpg" as="image" fetchpriority="high">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap">
-<link rel="stylesheet" href="styles.css?v=19">
-<script src="main.js?v=4" defer></script>
+<link rel="stylesheet" href="styles.css?v=20">
+<script src="main.js?v=5" defer></script>
 </head>
 <body>
 
@@ -294,5 +294,15 @@
   <p><a href="https://t.me/andzen200" target="_blank" rel="noopener">Телеграм: @andzen200</a></p>
 </footer>
 
+<!-- Плашка с отсчётом: появляется, когда долистали до цен, и висит до конца бонуса (31 октября, Москва). Срок — в data-until -->
+<a class="deal" id="deal" href="https://t.me/andzen200" target="_blank" rel="noopener" data-until="2026-11-01T00:00:00+03:00" hidden>
+  <span class="deal__txt"><b>Получить консультацию от&nbsp;меня бесплатно</b><span>бонус до&nbsp;31&nbsp;октября</span></span>
+  <span class="deal__time" aria-label="Осталось до конца бонуса">
+    <span class="deal__unit"><b data-t="d">00</b><small>дн</small></span>
+    <span class="deal__unit"><b data-t="h">00</b><small>ч</small></span>
+    <span class="deal__unit"><b data-t="m">00</b><small>мин</small></span>
+    <span class="deal__unit"><b data-t="s">00</b><small>сек</small></span>
+  </span>
+</a>
 </body>
 </html>

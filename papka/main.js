@@ -35,3 +35,44 @@
   }, { rootMargin: '0px 0px -8% 0px' });
   items.forEach(function (el) { io.observe(el); });
 })();
+
+/* Плашка с отсчётом до конца бонуса: появляется, когда долистали до цен, дальше висит до срока */
+(function () {
+  'use strict';
+  var bar = document.getElementById('deal');
+  if (!bar) return;
+  var until = Date.parse(bar.getAttribute('data-until'));
+  if (!(until > Date.now())) { bar.parentNode.removeChild(bar); return; }
+  var cells = {};
+  ['d', 'h', 'm', 's'].forEach(function (k) { cells[k] = bar.querySelector('[data-t="' + k + '"]'); });
+  var timer = null;
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function tick() {
+    var left = Math.floor((until - Date.now()) / 1000);
+    if (left <= 0) {
+      clearInterval(timer);
+      bar.parentNode.removeChild(bar);
+      document.body.classList.remove('has-deal');
+      return;
+    }
+    cells.d.textContent = pad(Math.floor(left / 86400));
+    cells.h.textContent = pad(Math.floor(left % 86400 / 3600));
+    cells.m.textContent = pad(Math.floor(left % 3600 / 60));
+    cells.s.textContent = pad(left % 60);
+  }
+  function show() {
+    if (!bar.hidden) return;
+    tick();
+    bar.hidden = false;
+    document.body.classList.add('has-deal');
+    timer = setInterval(tick, 1000);
+  }
+
+  var prices = document.getElementById('dostup');
+  if (!prices || !('IntersectionObserver' in window)) { show(); return; }
+  var io = new IntersectionObserver(function (entries) {
+    if (entries.some(function (e) { return e.isIntersecting; })) { show(); io.disconnect(); }
+  }, { rootMargin: '0px 0px -35% 0px' });
+  io.observe(prices);
+})();
