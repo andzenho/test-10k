@@ -182,6 +182,8 @@ main > .sec { margin-top: calc(-1 * var(--overlap)); border-radius: var(--overla
   text-wrap: balance;
 }
 .h2--center { text-align: center; }
+/* «ПАПКА —» — первое слово после первого экрана, крупнее остальных заголовков; строка шириной 3,27 em, размер подогнан под ширину экрана */
+.h2--xl { font-size: min(180px, calc((100vw - 32px) / 3.3)); line-height: .86; white-space: nowrap; }
 .h2--mt { margin-top: var(--s7); }
 .sec--light .h2 { color: var(--ink); }
 .h2 .ink { color: var(--accent); }
@@ -312,6 +314,7 @@ main > .sec { margin-top: calc(-1 * var(--overlap)); border-radius: var(--overla
   border: 7px solid transparent;
   border-top-color: var(--gold);
 }
+.flow__icon { display: block; width: 88px; height: 88px; margin: 0 auto var(--s2); }
 .flow__tag {
   display: inline-block;
   padding: 6px 16px 4px;
@@ -326,10 +329,9 @@ main > .sec { margin-top: calc(-1 * var(--overlap)); border-radius: var(--overla
 /* ---------- 7. Что внутри ---------- */
 
 .tools { display: grid; gap: var(--s2); margin-top: var(--s5); }
-.tools li { padding: var(--s3) 20px; border-radius: 18px; background: var(--paper); color: var(--ink); }
+.tools li { display: grid; grid-template-columns: 56px 1fr; align-items: center; gap: var(--s3); padding: var(--s3) 20px var(--s3) var(--s3); border-radius: 18px; background: var(--paper); color: var(--ink); }
 .tools__q { color: #8A746A; font-size: 14.5px; font-weight: 700; line-height: 1.3; }
-.tools__a { position: relative; margin-top: 4px; padding-left: 28px; font-size: 18px; font-weight: 800; line-height: 1.3; }
-.tools__a::before { content: '→'; position: absolute; left: 0; top: 0; color: var(--accent); font-weight: 800; }
+.tools__a { margin-top: 4px; font-size: 18px; font-weight: 800; line-height: 1.3; }
 .plus { margin-top: var(--s6); color: var(--gold); font: 700 64px/1 var(--display); text-transform: uppercase; text-align: center; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); margin-top: var(--s3); }
 .tiles li {
@@ -344,19 +346,7 @@ main > .sec { margin-top: calc(-1 * var(--overlap)); border-radius: var(--overla
   font-weight: 700;
   line-height: 1.25;
 }
-.tiles i {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--gold);
-  color: var(--ink);
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 800;
-}
+.tiles__icon { flex: none; width: 48px; height: 48px; }
 
 /* ---------- 8. Результат ---------- */
 
@@ -434,6 +424,9 @@ main > .sec { margin-top: calc(-1 * var(--overlap)); border-radius: var(--overla
 .meta { display: grid; gap: var(--s2); margin-top: var(--s4); }
 .meta--two { grid-template-columns: 1fr 1fr; margin-top: var(--s5); }
 .meta p { padding: var(--s2); border: 2px solid #E8D8BC; border-radius: 16px; background: var(--paper); font-size: 15px; line-height: 1.3; text-align: center; }
+.meta__key { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: var(--s2); text-align: left; }
+.meta__key .meta__icon { grid-row: span 2; }
+.meta__icon { flex: none; width: 44px; height: 44px; }
 .meta span { display: block; color: #7A6058; font-size: 13.5px; }
 .sec--last .meta b { color: var(--accent); font: 700 40px/1.05 var(--display); }
 .after { margin-top: var(--s3); color: var(--soft); font-size: 15px; line-height: 1.45; text-align: center; }
