@@ -121,15 +121,6 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .hero__foot { display: contents; }
 .hero__foot .btn { order: 2; position: relative; margin-top: -84px; }
-/* на широком экране текст стоит поверх фото: затемнение снизу, лицо остаётся открытым */
-.hero::after {
-  content: '';
-  display: none;
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(180deg, rgba(60, 10, 19, 0) 0%, rgba(60, 10, 19, 0) 56%, rgba(60, 10, 19, .82) 72%, var(--wine) 90%);
-}
 .hero__in { display: flex; flex-direction: column; padding: var(--s3) 0 calc(var(--overlap) + var(--s5)); }
 
 .pills { display: flex; align-items: stretch; gap: 8px; }
@@ -465,31 +456,28 @@ main > .sec { margin-top: calc(-1 * var(--overlap)); border-radius: var(--overla
 /* ---------- Широкий экран ---------- */
 
 @media (min-width: 900px) {
-  /* на широком экране фото не растягиваем на всю ширину: оно стоит по центру во всю высоту, края растворяются */
-  :root { --sec-pad: 96px; }
-  .hero { min-height: max(100svh, 900px); }
-  .hero__title { font-size: 220px; }
-  .hero::after { display: block; }
-  .hero__foot { display: block; padding-top: 22vh; }
-  .hero__foot .btn { margin-top: 0; }
-  .hero__lead { margin-top: 0; }
+  /* На широком экране тот же порядок, что на телефоне: текст, под ним фото, кнопка на низе фото.
+     Размер фото не зависит от ширины окна, а по высоте подстраивается под экран, края растворяются */
+  .hero { align-items: center; }
+  .hero__title { font-size: clamp(150px, 21vh, 220px); }
+  .hero__foot { text-align: center; }
   .hero__bg {
-    position: absolute;
-    z-index: -2;
-    height: auto;
-    margin: 0;
-    inset: 230px 0 0 0;
-    background-position: center top;
-    background-size: auto 100%;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16%), linear-gradient(to right, transparent calc(50% - 215px), #000 calc(50% - 120px), #000 calc(50% + 120px), transparent calc(50% + 215px));
+    /* ширина полосы = ширине фото при этой высоте (1024:1536 × 140%), тогда края фото уходят в прозрачность */
+    width: clamp(355px, 50.4vh, 523px);
+    height: clamp(380px, 54vh, 560px);
+    margin: -100px auto 0;
+    /* фото по высоте полосы, как на телефоне: голова и плечи */
+    background-size: auto 140%;
+    background-position: center 20%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 72%, transparent 100%), linear-gradient(to right, transparent 0, #000 22%, #000 78%, transparent 100%);
     -webkit-mask-composite: source-in;
-    mask-image: linear-gradient(to bottom, transparent 0, #000 16%), linear-gradient(to right, transparent calc(50% - 215px), #000 calc(50% - 120px), #000 calc(50% + 120px), transparent calc(50% + 215px));
+    mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 72%, transparent 100%), linear-gradient(to right, transparent 0, #000 22%, #000 78%, transparent 100%);
     mask-composite: intersect;
   }
   .wrap { width: min(100% - 64px, 720px); }
   .hero__in { padding-top: var(--s5); }
   .pills { max-width: 560px; margin-inline: auto; width: 100%; }
-  .hero__foot { max-width: 560px; margin-inline: auto; }
+  .hero__lead, .hero__note, .hero__foot .btn { width: 100%; max-width: 560px; margin-inline: auto; }
   .fits { grid-template-columns: 1fr 1fr; column-gap: var(--s5); }
   .tiles { grid-template-columns: repeat(4, 1fr); }
   .tiles li { flex-direction: column; text-align: center; }
