@@ -95,17 +95,20 @@ img { display: block; max-width: 100%; height: auto; }
   background: linear-gradient(var(--wine-top), var(--wine));
   isolation: isolate;
 }
-/* Фото на телефоне: отдельной полосой между подписью и текстом, верх заходит под «от Артёма Пак»,
-   низ растворяется в фоне, и текст стоит уже на ровном бордовом */
+/* Фото на телефоне: текст сверху, под ним фото, кнопка наезжает на низ фото.
+   Обёртка текста раскрывается, чтобы фото встало между текстом и кнопкой */
 .hero__bg {
   position: relative;
   z-index: -1;
-  height: clamp(360px, 102vw, 460px);
-  margin: -120px calc(50% - 50vw) 0;
-  background: url(img/hero.jpg) center top / cover no-repeat;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 68%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 68%, transparent 100%);
+  order: 1;
+  height: clamp(380px, 112vw, 480px);
+  margin: -80px calc(50% - 50vw) 0;
+  background: url(img/hero.jpg) center 22% / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 72%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 72%, transparent 100%);
 }
+.hero__foot { display: contents; }
+.hero__foot .btn { order: 2; position: relative; margin-top: -84px; }
 /* на широком экране текст стоит поверх фото: затемнение снизу, лицо остаётся открытым */
 .hero::after {
   content: '';
@@ -155,7 +158,7 @@ img { display: block; max-width: 100%; height: auto; }
   text-shadow: 0 2px 10px rgba(30, 4, 9, .85);
 }
 .hero__foot { margin-top: auto; text-align: center; }
-.hero__lead { font-size: 19px; font-weight: 700; line-height: 1.38; text-wrap: balance; text-shadow: 0 2px 14px rgba(30, 4, 9, .8); }
+.hero__lead { margin-top: 28px; font-size: 19px; font-weight: 700; line-height: 1.38; text-wrap: balance; text-shadow: 0 2px 14px rgba(30, 4, 9, .8); }
 .hero__note { margin: 10px 0 22px; color: var(--soft); font-size: 15px; text-shadow: 0 2px 10px rgba(30, 4, 9, .8); }
 .hero__note b { color: var(--gold); }
 
@@ -454,13 +457,16 @@ main > .sec { margin-top: -34px; border-radius: 34px 34px 0 0; z-index: 1; }
   .hero { min-height: max(100svh, 900px); }
   .hero__title { font-size: 220px; }
   .hero::after { display: block; }
-  .hero__foot { padding-top: 22vh; }
+  .hero__foot { display: block; padding-top: 22vh; }
+  .hero__foot .btn { margin-top: 0; }
+  .hero__lead { margin-top: 0; }
   .hero__bg {
     position: absolute;
     z-index: -2;
     height: auto;
     margin: 0;
     inset: 230px 0 0 0;
+    background-position: center top;
     background-size: auto 100%;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16%), linear-gradient(to right, transparent calc(50% - 215px), #000 calc(50% - 120px), #000 calc(50% + 120px), transparent calc(50% + 215px));
     -webkit-mask-composite: source-in;
