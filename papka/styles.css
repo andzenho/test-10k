@@ -513,6 +513,8 @@ main > .sec { margin-top: calc(-1 * var(--overlap)); border-radius: var(--overla
 .sec--light .stats div + div { border-top-color: #E3D3B8; }
 .sec--light .stats dt { color: var(--accent); }
 .sec--light .label--gold { border-color: var(--accent); color: var(--accent); }
+/* тёмная карточка внутри светлого экрана остаётся в золоте, иначе бордовое сливается с бордовым */
+.sec--light .card--wine .label--gold, .sec--light .card--wine .gold { border-color: var(--gold); color: var(--gold); }
 .sec--light .projects li { border: 2px solid #E3D3B8; background: var(--paper); }
 .sec--light .projects b { color: var(--accent); }
 .sec--light .btn--line { border-color: var(--accent); color: var(--ink); }
