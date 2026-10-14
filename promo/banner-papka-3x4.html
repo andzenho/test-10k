@@ -4,68 +4,74 @@
 <meta charset="utf-8">
 <title>Баннер ПАПКА 3:4</title>
 <!-- Баннер к посту про ПАПКУ: 1080×1440 (3:4). Картинка снимается скриншотом этой страницы в окне 1080×1440.
-     Три зоны без наложения: название сверху, фото посередине, текст и подарок снизу. Всё по центру. -->
+     Фото на весь баннер, его красный студийный фон и есть фон баннера. Сверху название над головой,
+     снизу текст на затемнении. Всё по центру. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   @font-face { font-family: 'Bebas Neue'; font-weight: 700; src: url(../papka/fonts/BebasNeue-Bold.ttf) format('truetype'); }
-  :root {
-    --wine-top: #531019; --wine: #3C0A13; --deep: #2A080E;
-    --gold: #E9B56A; --gold-hi: #F4CD8C; --cream: #F8EFE2; --hero-ink: #FBECD1; --ink: #2B0810;
-  }
+  :root { --gold: #E9B56A; --gold-hi: #F4CD8C; --cream: #F8EFE2; --hero-ink: #FBECD1; --ink: #2B0810; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1440px; overflow: hidden; }
   body {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 72px 72px 80px;
-    background: linear-gradient(180deg, var(--wine-top) 0%, var(--wine) 50%, var(--deep) 100%);
+    padding: 64px 72px 80px;
+    /* продолжение студийного фона над фото: светлее в центре, темнее к краям */
+    background: radial-gradient(ellipse 70% 60% at 50% 10%, #5A0A10 0%, #3A0509 55%, #1E0102 100%);
     color: var(--cream);
     font-family: 'Montserrat', system-ui, sans-serif;
     text-align: center;
     -webkit-font-smoothing: antialiased;
     isolation: isolate;
   }
+  /* фото на всю ширину, опущено ниже названия; верхний край растворяется в фоне */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background: url(img/artem-arms.jpg) 50% 150px / 940px auto no-repeat;
+    /* края фото совпадают по цвету с фоном; на всякий случай растворяем и боковые края */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 150px, #000 320px), linear-gradient(to right, transparent 70px, #000 150px, #000 930px, transparent 1010px);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to bottom, transparent 150px, #000 320px), linear-gradient(to right, transparent 70px, #000 150px, #000 930px, transparent 1010px);
+    mask-composite: intersect;
+  }
+  /* затемнение снизу под текст */
+  body::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg, rgba(24, 2, 5, 0) 0%, rgba(24, 2, 5, 0) 56%, rgba(24, 2, 5, .82) 72%, rgba(24, 2, 5, .94) 100%);
+  }
   /* разрядка добавляет пробел после последней буквы; отступ слева на ту же величину возвращает текст в центр */
   .spaced { letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
 
   .title {
-    font: 700 310px/.8 'Bebas Neue', Impact, sans-serif;
+    font: 700 300px/.8 'Bebas Neue', Impact, sans-serif;
     background: linear-gradient(180deg, #FFF6E6 0%, var(--hero-ink) 45%, #D8B98C 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 14px 40px rgba(0, 0, 0, .4));
+    filter: drop-shadow(0 14px 40px rgba(0, 0, 0, .45));
   }
-  .by { margin-top: 0; color: var(--gold); font-size: 34px; font-weight: 800; }
+  .by { margin-top: 0; color: var(--gold); font-size: 32px; font-weight: 800; text-shadow: 0 2px 12px rgba(20, 2, 5, .8); }
 
-  /* фото: голова и плечи, края и низ растворяются в фоне, текст на него не заходит */
-  .photo {
-    position: relative;
-    z-index: -1;
-    flex: none;
-    width: 580px;
-    height: 600px;
-    margin-top: -10px;
-    background: url(../papka/img/hero.jpg) center 30% / 580px auto no-repeat;
-    /* овал вокруг головы и плеч: у студийного фона нет прямых краёв */
-    -webkit-mask-image: radial-gradient(ellipse 50% 58% at 50% 42%, #000 50%, transparent 100%);
-    mask-image: radial-gradient(ellipse 50% 58% at 50% 42%, #000 50%, transparent 100%);
-  }
-
-  .lead { margin-top: -24px; color: var(--hero-ink); font-size: 56px; font-weight: 800; line-height: 1.16; }
+  .bottom { margin-top: auto; width: 100%; }
+  .lead { color: var(--hero-ink); font-size: 56px; font-weight: 800; line-height: 1.16; text-shadow: 0 3px 20px rgba(20, 2, 5, .9); }
   .lead b { color: var(--gold); }
-  .price { margin-top: 16px; color: rgba(248, 239, 226, .8); font-size: 38px; font-weight: 600; }
-
+  .price { margin-top: 14px; color: rgba(248, 239, 226, .85); font-size: 38px; font-weight: 600; text-shadow: 0 2px 14px rgba(20, 2, 5, .9); }
   .gift {
-    margin-top: auto;
-    width: 100%;
-    padding: 30px 32px 32px;
+    margin-top: 40px;
+    padding: 28px 32px 30px;
     border: 3px solid rgba(255, 246, 227, .75);
     border-radius: 36px;
     background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, #D99E4E);
-    box-shadow: 0 0 0 8px rgba(233, 181, 106, .16), 0 22px 60px rgba(233, 181, 106, .38);
+    box-shadow: 0 0 0 8px rgba(233, 181, 106, .16), 0 22px 60px rgba(233, 181, 106, .35);
     color: var(--ink);
   }
   .gift__tag { font-size: 24px; font-weight: 800; opacity: .7; }
@@ -75,12 +81,13 @@
 <body>
   <h1 class="title">ПАПКА</h1>
   <p class="by spaced">от&nbsp;Артёма Пак</p>
-  <div class="photo"></div>
-  <p class="lead">На&nbsp;чём мои проекты сделали<br><b>$1&nbsp;млн</b> за&nbsp;2025–2026</p>
-  <p class="price">по&nbsp;цене одной консультации</p>
-  <div class="gift">
-    <p class="gift__tag spaced">Подарок до&nbsp;31&nbsp;октября</p>
-    <p>Личная консультация со&nbsp;мной</p>
+  <div class="bottom">
+    <p class="lead">На&nbsp;чём мои проекты сделали<br><b>$1&nbsp;млн</b> за&nbsp;2025–2026</p>
+    <p class="price">по&nbsp;цене одной консультации</p>
+    <div class="gift">
+      <p class="gift__tag spaced">Подарок до&nbsp;31&nbsp;октября</p>
+      <p>Личная консультация со&nbsp;мной</p>
+    </div>
   </div>
 </body>
 </html>
