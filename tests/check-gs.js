@@ -93,22 +93,27 @@ assert.ok(post({ sid: 'a1', step: 'open', stepNo: 1, row: { 'Имя': '', utm_so
 assert.ok(post({ sid: 'a1', step: 'block2', stepNo: 4, row: { 'Имя': 'Аня' } }).ok);
 // запрос пришёл с опозданием: шаг назад не откатывается
 assert.ok(post({ sid: 'a1', step: 'block1', stepNo: 3, row: { 'Имя': 'Аня' } }).ok);
+// пока человек не дошёл до результата, строки на листе «Прохождения» нет: шаги только в журнале
+var mainRows = function (sid) { return (sheets['Прохождения'] ? sheets['Прохождения'].rows : []).filter(function (x) { return x[0] === sid; }).length; };
+assert.strictEqual(mainRows('a1'), 0);
+assert.strictEqual(sheets['События'].rows.length, 1 + 3);
+
+assert.ok(post({ sid: 'a1', step: 'result', stepNo: 11, row: {
+  'Имя': 'Аня', utm_source: 'tg', 'Ветка': 'эксперт', 'Этап': 'Случайные деньги', 'Главная точка роста': 'Продажи', 'Потенциал, ₽ в месяц': 430000,
+  'Здоровье: Продажи': 2, 'Q7. Как ведёт себя твой доход?': 'скачет от месяца к месяцу', 'Q3. Твоя ниша': 'Коучинг',
+  'Q4. Чем ты помогаешь людям? В двух словах': '=HYPERLINK("http://x")', 'ID': 'подмена', 'Шаг №': 99
+} }).ok);
 var r = rowOf('a1');
-assert.strictEqual(r['Шаг №'], 4);
-assert.strictEqual(r['Последний шаг'], 'Закончил блок 2: Площадки и охваты');
 assert.strictEqual(r['Имя'], 'Аня');
 assert.strictEqual(r.utm_source, 'tg');
+assert.strictEqual(r['Последний шаг'], 'Увидел результат');
 // даты создаются внутри скрипта, поэтому проверяем по типу, а не через instanceof
 [r['Начало'], r['Обновлено']].forEach(function (d) {
   assert.strictEqual(Object.prototype.toString.call(d), '[object Date]');
 });
-
-assert.ok(post({ sid: 'a1', step: 'result', stepNo: 11, row: {
-  'Имя': 'Аня', 'Ветка': 'эксперт', 'Этап': 'Случайные деньги', 'Главная точка роста': 'Продажи', 'Потенциал, ₽ в месяц': 430000,
-  'Здоровье: Продажи': 2, 'Q7. Как ведёт себя твой доход?': 'скачет от месяца к месяцу', 'Q3. Твоя ниша': 'Коучинг',
-  'Q4. Чем ты помогаешь людям? В двух словах': '=HYPERLINK("http://x")', 'ID': 'подмена', 'Шаг №': 99
-} }).ok);
-r = rowOf('a1');
+// запрос пришёл с опозданием: шаг назад не откатывается
+assert.ok(post({ sid: 'a1', step: 'block8', stepNo: 10, row: { 'Имя': 'Аня' } }).ok);
+assert.strictEqual(rowOf('a1')['Шаг №'], 11);
 assert.strictEqual(r['Главная точка роста'], 'Продажи');
 assert.strictEqual(r['Здоровье: Продажи'], 2);
 assert.strictEqual(r['Q4. Чем ты помогаешь людям? В двух словах'], '\'=HYPERLINK("http://x")', 'формула должна стать текстом');
@@ -152,9 +157,10 @@ assert.strictEqual(leads[0]['Что разобрать'], 'продажи и б�
 
 // второй человек — вторая строка; уведомление без шага «заявка» не уходит
 assert.ok(post({ sid: 'b2', step: 'open', stepNo: 1, notify: true, row: {} }).ok);
-assert.strictEqual(sheets['Прохождения'].rows.length, 3);
+assert.strictEqual(mainRows('b2'), 0, 'открыл и ушёл: в «Прохождения» не попадает');
+assert.strictEqual(sheets['Прохождения'].rows.length, 2);
 assert.strictEqual(sent.length, 1);
-assert.strictEqual(sheets['События'].rows.length, 1 + 7);
+assert.strictEqual(sheets['События'].rows.length, 1 + 8);
 assert.strictEqual(post({ step: 'open', row: {} }).ok, false, 'без ID строка не создаётся');
 
 // формулировку вопроса поменяли: ответ идёт в тот же столбец, заголовок обновился
@@ -189,8 +195,17 @@ assert.deepStrictEqual(head.slice(0, 7), ['ID', 'Начало', 'Имя', 'Ни�
 ctx.setup();
 var f = sheets['Воронка'].rows;
 assert.strictEqual(f.length, 15);
-assert.strictEqual(f[1][1], '=COUNTIF(\'Прохождения\'!F:F;">=1")');
-assert.ok(/COUNTIFS/.test(f[4][1]) && /!G:G;"<>продюсер без проекта"/.test(f[4][1]), f[4][1]);
+assert.strictEqual(f[1][0], 'Открыл тест');
+assert.strictEqual(f[1][1], "=IFERROR(COUNTUNIQUE(FILTER('События'!B:B;'События'!C:C=A2));0)");
+assert.strictEqual(f[12][1], "=IFERROR(COUNTUNIQUE(FILTER('События'!B:B;'События'!C:C=A13));0)");
+
+// уборка старых незаконченных строк: пустые и без результата уходят, с результатом и с ником остаются
+var M = sheets['Прохождения'], mh = M.rows[0];
+function fake(id, stepNo, nick) { var row = mh.map(function () { return ''; }); row[0] = id; row[mh.indexOf('Шаг №')] = stepNo; row[mh.indexOf('Ник в Телеграме')] = nick || ''; M.rows.push(row); }
+fake('half', 4); M.rows.push(mh.map(function () { return ''; })); fake('done', 11); fake('nick-early', 3, '@early');
+assert.strictEqual(ctx.pruneMain(M), 2);
+var ids = M.rows.slice(1).map(function (x) { return x[0]; });
+assert.ok(ids.indexOf('half') < 0 && ids.indexOf('done') >= 0 && ids.indexOf('nick-early') >= 0 && ids.indexOf('a1') >= 0, ids.join(','));
 assert.strictEqual(ctx.colLetter(27), 'AA');
 assert.strictEqual(ctx.colLetter(52), 'AZ');
 

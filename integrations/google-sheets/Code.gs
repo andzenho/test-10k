@@ -3,9 +3,9 @@
  *
  * Листы:
  *   «Лиды»        — только те, кто отправил заявку. Статус и комментарий ведутся руками.
- *   «Прохождения» — одна строка на прохождение, даже без заявки. Страница шлёт её по частям:
- *                   открытие, шаги воронки, результат, заявка. Скрипт находит строку по ID и дописывает.
- *   «Воронка»     — сколько человек дошло до каждого шага.
+ *   «Прохождения» — одна строка на каждого, кто дошёл до результата (с заявкой и без).
+ *                   Строка появляется на шаге «результат», дальше скрипт находит её по ID и дописывает.
+ *   «Воронка»     — сколько человек дошло до каждого шага; считается по журналу «События».
  *   «События»     — журнал шагов по времени.
  *
  * Колонки ответов создаются сами по названиям полей, поэтому новые вопросы в data.js
@@ -18,9 +18,11 @@
  *   TG_CHAT_ID   — куда слать заявки (свой id или id чата)
  */
 
-var VERSION = 4;
+var VERSION = 5;
 // оформление накатывается заново, только когда меняется это число
-var LAYOUT_VERSION = 2;
+var LAYOUT_VERSION = 3;
+// строка на листе «Прохождения» появляется, только когда человек дошёл до результата
+var RESULT_STEP = 11;
 var SHEET_MAIN = 'Прохождения';
 var SHEET_LEADS = 'Лиды';
 var SHEET_EVENTS = 'События';
@@ -115,6 +117,11 @@ function doPost(e) {
     var headers = headersOf(sheet);
     var r = findRow(sheet, 1, sid);
     var now = new Date();
+    // кто не дошёл до результата, в «Прохождения» не попадает: его шаги остаются только в журнале для воронки
+    if (!r && stepNo < RESULT_STEP) {
+      getSheet(SHEET_EVENTS, EVENTS_HEAD).appendRow([now, sid, stepName(step), stepNo]);
+      return json({ ok: true });
+    }
     if (!r) {
       r = sheet.getLastRow() + 1;
       ensureSize(sheet, r, headers.length);
@@ -328,6 +335,7 @@ function ensureLayout() {
   });
   step('порядок колонок', function () { reorder(main, HEAD); reorder(leads, LEADS_HEAD); });
   step('воронка', writeFunnel);
+  step('убрать незаконченные', function () { pruneMain(main); });
   step('перенос лидов', function () { syncLeads(main); });
   step('оформление: лиды', function () { styleLeads(leads); });
   step('оформление: прохождения', function () { styleMain(main); });
@@ -387,7 +395,7 @@ function headColor(name) {
 function widthOf(name) {
   var W = {
     'ID': 120, 'Начало': 130, 'Обновлено': 130, 'Дата заявки': 130, 'Имя': 140, 'Ник в Телеграме': 150,
-    'Последний шаг': 250, 'Шаг №': 60, 'Ветка': 150, 'Готовность': 100, 'Этап': 170, 'Статус': 160,
+    'Последний шаг': 250, 'Шаг №': 60, 'Ветка': 190, 'Готовность': 120, 'Этап': 170, 'Статус': 160,
     'Комментарий': 340, 'Что разобрать': 340, 'Ссылка на блог': 220, 'Что пробовал(а)': 300, 'Почему сейчас': 300,
     'Главная точка роста': 130, 'Вторая точка роста': 130, 'Ниша': 220, 'Чем помогает': 260
   };
@@ -484,25 +492,37 @@ function styleEvents(sheet) {
   sheet.setTabColor('#5B6470');
 }
 
-// Сводка воронки. Колонки листа «Прохождения» ищем по названию: их порядок может меняться.
+// Сводка воронки: сколько разных людей сделали каждый шаг. Считается по журналу «События»,
+// поэтому незаконченные прохождения в воронке видны, хотя на листе «Прохождения» их нет.
 function writeFunnel() {
-  var main = getSheet(SHEET_MAIN, HEAD);
+  getSheet(SHEET_EVENTS, EVENTS_HEAD);
   var f = getSheet(SHEET_FUNNEL, FUNNEL_HEAD);
-  var headers = headersOf(main);
-  var s = colLetter(headers.indexOf('Шаг №') + 1), b = colLetter(headers.indexOf('Ветка') + 1);
-  var stepCol = "'" + SHEET_MAIN + "'!" + s + ':' + s;
-  var branchCol = "'" + SHEET_MAIN + "'!" + b + ':' + b;
+  var ids = "'" + SHEET_EVENTS + "'!B:B", names = "'" + SHEET_EVENTS + "'!C:C";
   var rows = STEPS.map(function (st, i) {
     var n = i + 2;
-    // блоки 2–8 продюсер без проекта не проходит, из этих строк его убираем
-    var count = st[0] >= 4 && st[0] <= 10
-      ? '=COUNTIFS(' + stepCol + ';">=' + st[0] + '";' + branchCol + ';"<>продюсер без проекта")'
-      : '=COUNTIF(' + stepCol + ';">=' + st[0] + '")';
+    var count = '=IFERROR(COUNTUNIQUE(FILTER(' + ids + ';' + names + '=A' + n + '));0)';
     return [st[2], count, '=IF($B$2=0;"";B' + n + '/$B$2)', i === 0 ? '' : '=IF(B' + (n - 1) + '=0;"";B' + n + '/B' + (n - 1) + ')'];
   });
   f.getRange(2, 1, rows.length, 4).setValues(rows);
   f.getRange(2, 3, rows.length, 2).setNumberFormat('0%');
   f.setColumnWidth(1, 320);
+}
+
+// Убирает с листа «Прохождения» пустые строки и тех, кто не дошёл до результата и не оставил ник
+function pruneMain(sheet) {
+  var last = sheet.getLastRow();
+  if (last < 2) return 0;
+  var headers = headersOf(sheet);
+  var stepCol = headers.indexOf('Шаг №'), nickCol = headers.indexOf('Ник в Телеграме');
+  var data = sheet.getRange(2, 1, last - 1, headers.length).getValues();
+  var removed = 0;
+  for (var i = data.length - 1; i >= 0; i--) {
+    var row = data[i];
+    var empty = row.every(function (v) { return v === '' || v == null; });
+    var unfinished = (Number(row[stepCol]) || 0) < RESULT_STEP && !clean(row[nickCol]).trim();
+    if (empty || unfinished) { sheet.deleteRow(i + 2); removed++; }
+  }
+  return removed;
 }
 
 /* ---------- Внутреннее ---------- */
