@@ -95,18 +95,21 @@ img { display: block; max-width: 100%; height: auto; }
   background: linear-gradient(var(--wine-top), var(--wine));
   isolation: isolate;
 }
-/* Фото: начинается под надписью «ПАПКА», верхний край растворяется в фоне */
+/* Фото на телефоне: отдельной полосой между подписью и текстом, верх заходит под «от Артёма Пак»,
+   низ растворяется в фоне, и текст стоит уже на ровном бордовом */
 .hero__bg {
-  position: absolute;
-  inset: clamp(96px, 15svh, 190px) 0 0 0;
-  z-index: -2;
+  position: relative;
+  z-index: -1;
+  height: clamp(360px, 102vw, 460px);
+  margin: -120px calc(50% - 50vw) 0;
   background: url(img/hero.jpg) center top / cover no-repeat;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 16%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 68%, transparent 100%);
 }
-/* затемнение снизу, чтобы текст и кнопка читались поверх фото; лицо остаётся открытым */
+/* на широком экране текст стоит поверх фото: затемнение снизу, лицо остаётся открытым */
 .hero::after {
   content: '';
+  display: none;
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -151,7 +154,7 @@ img { display: block; max-width: 100%; height: auto; }
   text-align: center;
   text-shadow: 0 2px 10px rgba(30, 4, 9, .85);
 }
-.hero__foot { margin-top: auto; padding-top: 22vh; text-align: center; }
+.hero__foot { margin-top: auto; text-align: center; }
 .hero__lead { font-size: 19px; font-weight: 700; line-height: 1.38; text-wrap: balance; text-shadow: 0 2px 14px rgba(30, 4, 9, .8); }
 .hero__note { margin: 10px 0 22px; color: var(--soft); font-size: 15px; text-shadow: 0 2px 10px rgba(30, 4, 9, .8); }
 .hero__note b { color: var(--gold); }
@@ -450,7 +453,13 @@ main > .sec { margin-top: -34px; border-radius: 34px 34px 0 0; z-index: 1; }
   /* на широком экране фото не растягиваем на всю ширину: оно стоит по центру во всю высоту, края растворяются */
   .hero { min-height: max(100svh, 900px); }
   .hero__title { font-size: 220px; }
+  .hero::after { display: block; }
+  .hero__foot { padding-top: 22vh; }
   .hero__bg {
+    position: absolute;
+    z-index: -2;
+    height: auto;
+    margin: 0;
     inset: 230px 0 0 0;
     background-size: auto 100%;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16%), linear-gradient(to right, transparent calc(50% - 215px), #000 calc(50% - 120px), #000 calc(50% + 120px), transparent calc(50% + 215px));
