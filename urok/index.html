@@ -58,6 +58,7 @@
     text-wrap: balance;
   }
   h1 b {
+    white-space: nowrap;
     font-weight: 800;
     background: linear-gradient(180deg, #ffffff 30%, #c9c9c9);
     -webkit-background-clip: text; background-clip: text;
@@ -121,6 +122,12 @@
       0 0 90px rgba(61, 220, 90, .3); }
   .knopka:active { transform: translateY(0); }
   .knopka svg { width: 22px; height: 22px; flex: none; }
+  /* ПК: заголовок в 2–3 строки, видео занимает всю оставшуюся высоту окна, кнопка остаётся на экране */
+  @media (min-width: 900px) {
+    main { max-width: 1600px; gap: 24px; padding: 28px 32px 28px; }
+    h1 { font-size: clamp(30px, 2.6vw, 46px); max-width: 32ch; }
+    .video { max-width: max(640px, calc((100svh - 380px) * 16 / 9)); }
+  }
   @media (max-width: 600px) {
     main { padding-top: 32px; }
     /* видео почти в край экрана: 4 px от краёв вместо 16 */
