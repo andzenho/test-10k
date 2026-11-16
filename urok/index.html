@@ -94,45 +94,60 @@
     background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/uhyt8e6584/swatch');
     display: block; filter: blur(5px); padding-top: 56.25%;
   }
+  /* кнопка: глубокий зелёный, тонкая светлая кромка, мягкое свечение, стрелка в белом круге */
   .knopka {
-    display: inline-flex; align-items: center; justify-content: center; gap: 12px;
-    min-height: 68px;
-    padding: 0 40px;
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: space-between; gap: 20px;
+    min-height: 64px;
+    padding: 8px 8px 8px 32px;
     border-radius: 999px;
-    background: linear-gradient(180deg, #5ef27a, var(--zel) 55%, var(--zel-glub));
-    color: #04150a;
-    font-weight: 800;
-    font-size: clamp(18px, 2.2vw, 21px);
-    letter-spacing: -0.02em;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 50%),
+      linear-gradient(180deg, #23b84a, #128a35);
+    color: #fff;
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.01em;
     text-decoration: none;
+    border: 1px solid rgba(184, 247, 193, .28);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, .55),
-      inset 0 -2px 0 rgba(0, 0, 0, .15),
-      0 0 0 1px rgba(184, 247, 193, .35),
-      0 10px 40px -6px rgba(61, 220, 90, .55),
-      0 0 70px rgba(61, 220, 90, .22);
-    transition: transform .15s ease, box-shadow .15s ease;
-    width: min(100%, 440px);
+      inset 0 1px 0 rgba(255, 255, 255, .25),
+      0 12px 32px -12px rgba(35, 184, 74, .75),
+      0 0 48px -8px rgba(61, 220, 90, .35);
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
   }
-  .knopka:hover { transform: translateY(-2px); box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, .6),
-      inset 0 -2px 0 rgba(0, 0, 0, .15),
-      0 0 0 1px rgba(184, 247, 193, .5),
-      0 14px 48px -6px rgba(61, 220, 90, .7),
-      0 0 90px rgba(61, 220, 90, .3); }
+  .knopka .strelka {
+    display: grid; place-items: center;
+    width: 48px; height: 48px; flex: none;
+    border-radius: 50%;
+    background: #fff;
+    color: #128a35;
+    transition: transform .2s ease;
+  }
+  .knopka svg { width: 20px; height: 20px; }
+  .knopka:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .3),
+      0 16px 40px -12px rgba(35, 184, 74, .9),
+      0 0 64px -8px rgba(61, 220, 90, .45);
+  }
+  .knopka:hover .strelka { transform: translateX(3px); }
   .knopka:active { transform: translateY(0); }
-  .knopka svg { width: 22px; height: 22px; flex: none; }
   /* ПК: заголовок в 2–3 строки, видео занимает всю оставшуюся высоту окна, кнопка остаётся на экране */
   @media (min-width: 900px) {
     main { max-width: 1600px; gap: 24px; padding: 28px 32px 28px; }
     h1 { font-size: clamp(30px, 2.6vw, 46px); max-width: 32ch; }
     .video { max-width: max(640px, calc((100svh - 380px) * 16 / 9)); }
+    .knopka { min-height: 68px; padding-left: 40px; font-size: 19px; gap: 28px; }
+    .knopka .strelka { width: 52px; height: 52px; }
   }
   @media (max-width: 600px) {
     main { padding-top: 32px; }
     /* видео почти в край экрана: 4 px от краёв вместо 16 */
     .video { width: calc(100% + 24px); max-width: none; margin: 0 -12px; border-radius: 8px; }
-    .knopka { min-height: 62px; padding: 0 24px; }
+    .knopka { width: 100%; padding-left: 24px; font-size: 17px; }
   }
 </style>
 </head>
@@ -150,7 +165,7 @@
 
   <a class="knopka" href="https://t.me/m/hZs8htoGYjRi" target="_blank" rel="noopener">
     Попасть на консультацию
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    <span class="strelka"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
   </a>
 </main>
 </body>
