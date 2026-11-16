@@ -123,7 +123,8 @@
   .knopka svg { width: 22px; height: 22px; flex: none; }
   @media (max-width: 600px) {
     main { padding-top: 32px; }
-    .video { border-radius: 12px; }
+    /* видео почти в край экрана: 4 px от краёв вместо 16 */
+    .video { width: calc(100% + 24px); max-width: none; margin: 0 -12px; border-radius: 8px; }
     .knopka { min-height: 62px; padding: 0 24px; }
   }
 </style>
