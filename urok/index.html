@@ -140,6 +140,11 @@
     .video { width: calc(100% + 24px); max-width: none; margin: 0 -12px; border-radius: 8px; }
     .knopka { width: 100%; font-size: 17px; gap: 10px; padding: 0 16px; }
   }
+  /* самые узкие телефоны: кнопка всё равно в одну строку */
+  @media (max-width: 370px) {
+    .knopka { font-size: 15px; gap: 8px; padding: 0 12px; }
+    .knopka svg { width: 19px; height: 19px; }
+  }
 </style>
 </head>
 <body>
